@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0; url=nebula8.html">
+<title>NEBULA-8 | Redirecting...</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #04030F;
+    display: flex; align-items: center; justify-content: center;
+    height: 100vh; font-family: 'Courier New', monospace; color: #00F5FF;
+    flex-direction: column; gap: 16px;
+  }
+  .brand { font-size: 32px; font-weight: 900; letter-spacing: .2em; }
+  .msg   { font-size: 12px; letter-spacing: .3em; opacity: .5; }
+  .dot   { display: inline-block; animation: blink 1s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay: .2s; }
+  .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,100%{opacity:.1} 50%{opacity:1} }
+</style>
+</head>
+<body>
+  <div class="brand">NEBULA-8</div>
+  <div class="msg">LAUNCHING<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>
+  <script>window.location.replace('nebula8.html');</script>
+</body>
+</html>
