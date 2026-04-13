@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEBULA-8 | Subject Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   ROOT VARIABLES
+═══════════════════════════════════════════════ */
+:root {
+  --bg:      #04030F;
+  --cyan:    #00F5FF;
+  --lime:    #AAFF00;
+  --pink:    #FF2EF5;
+  --amber:   #FFBF00;
+  --white:   #D8E8FF;
+  --glass-bg: rgba(8, 16, 40, 0.55);
+  --glass-border: rgba(255,255,255,0.08);
+  --active-color: var(--cyan);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  background: var(--bg);
+  overflow: hidden;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  color: var(--white);
+  cursor: none;
+}
+
+/* ═══════════════════════════════════════════════
+   CUSTOM CURSOR
+═══════════════════════════════════════════════ */
+#cursor {
+  position: fixed; width:12px; height:12px;
+  border-radius:50%; background: var(--active-color);
+  pointer-events:none; z-index:9999;
+  transform:translate(-50%,-50%);
+  box-shadow: 0 0 10px var(--active-color), 0 0 20px var(--active-color);
+  transition: background .3s, box-shadow .3s;
+  mix-blend-mode: screen;
+}
+#cursor-ring {
+  position:fixed; width:28px; height:28px;
+  border-radius:50%; border:1px solid var(--active-color);
+  pointer-events:none; z-index:9998;
+  transform:translate(-50%,-50%);
+  opacity:.4;
+  transition: width .15s, height .15s, opacity .15s, border-color .3s;
+}
+
+/* ═══════════════════════════════════════════════
+   STAR CANVAS
+═══════════════════════════════════════════════ */
+#starCanvas {
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  z-index:0;
+}
+
+/* ═══════════════════════════════════════════════
+   GHOST ROCKET FLEET
+═══════════════════════════════════════════════ */
+.ghost-fleet { position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+
+.ghost-rocket {
+  position: absolute;
+  font-size: var(--fs, 20px);
+  opacity: var(--op, 0.06);
+  filter: var(--flt, none);
+  animation: var(--anim) var(--dur) linear infinite;
+  animation-delay: var(--delay);
+  will-change: transform;
+}
+
+/* Rocket SVG ghost */
+.ghost-svg {
+  position:absolute;
+  opacity: var(--op, 0.05);
+  animation: var(--anim) var(--dur) linear infinite;
+  animation-delay: var(--delay);
+  will-change: transform;
+}
+
+/* Movement paths */
+@keyframes rocketDrift1 {
+  0%   { transform: translate(-80px, 110vh) rotate(-25deg); }
+  100% { transform: translate(110vw, -80px) rotate(-25deg); }
+}
+@keyframes rocketDrift2 {
+  0%   { transform: translate(110vw, 20vh) rotate(200deg); }
+  100% { transform: translate(-80px, 80vh) rotate(200deg); }
+}
+@keyframes rocketDrift3 {
+  0%   { transform: translate(30vw, 110vh) rotate(-10deg); }
+  100% { transform: translate(60vw, -80px) rotate(-10deg); }
+}
+@keyframes rocketDrift4 {
+  0%   { transform: translate(-80px, 40vh) rotate(-35deg); }
+  100% { transform: translate(110vw, 10vh) rotate(-35deg); }
+}
+@keyframes rocketDrift5 {
+  0%   { transform: translate(80vw, 110vh) rotate(-50deg); }
+  100% { transform: translate(-80px, 20vh) rotate(-50deg); }
+}
+@keyframes rocketDrift6 {
+  0%   { transform: translate(-80px, 70vh) rotate(-15deg); }
+  100% { transform: translate(110vw, 30vh) rotate(-15deg); }
+}
+@keyframes rocketDrift7 {
+  0%   { transform: translate(50vw, 110vh) rotate(0deg); }
+  100% { transform: translate(70vw, -80px) rotate(0deg); }
+}
+@keyframes rocketDrift8 {
+  0%   { transform: translate(110vw, 60vh) rotate(-165deg); }
+  100% { transform: translate(-80px, 55vh) rotate(-165deg); }
+}
+@keyframes rocketDrift9 {
+  0%   { transform: translate(10vw, 110vh) rotate(-40deg); }
+  100% { transform: translate(40vw, -80px) rotate(-40deg); }
+}
+@keyframes rocketDrift10 {
+  0%   { transform: translate(-80px, 85vh) rotate(-20deg); }
+  100% { transform: translate(110vw, 55vh) rotate(-20deg); }
+}
+
+/* ═══════════════════════════════════════════════
+   SHOOTING STARS (diagonal streaks)
+═══════════════════════════════════════════════ */
+.shooting-star {
+  position:fixed; pointer-events:none; z-index:2;
+  height:1.5px; border-radius:2px;
+  background: linear-gradient(90deg, rgba(255,255,255,.9), transparent);
+  transform-origin: right center;
+  animation: shoot var(--sd) ease-out infinite;
+  animation-delay: var(--sdelay);
+  opacity:0;
+}
+@keyframes shoot {
+  0%   { opacity:0; transform: translateX(0) translateY(0) rotate(-30deg) scaleX(0); }
+  5%   { opacity:1; transform: translateX(0) translateY(0) rotate(-30deg) scaleX(1); }
+  40%  { opacity:.6; }
+  60%  { opacity:0; transform: translateX(200px) translateY(120px) rotate(-30deg) scaleX(.4); }
+  100% { opacity:0; transform: translateX(200px) translateY(120px) rotate(-30deg) scaleX(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   NEBULA BLOBS
+═══════════════════════════════════════════════ */
+.nebula { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; z-index:1; }
+.n1 { width:500px;height:500px;background:rgba(0,100,180,.1); top:-10%;left:-10%;animation:npulse 9s ease-in-out infinite alternate; }
+.n2 { width:400px;height:400px;background:rgba(120,0,160,.08); top:15%;right:-8%;animation:npulse 11s ease-in-out infinite alternate;animation-delay:2s; }
+.n3 { width:350px;height:350px;background:rgba(0,160,80,.06); bottom:0%;left:35%;animation:npulse 13s ease-in-out infinite alternate;animation-delay:4s; }
+@keyframes npulse { from{opacity:.5;transform:scale(1);} to{opacity:1;transform:scale(1.15);} }
+
+/* ═══════════════════════════════════════════════
+   GRID OVERLAY
+═══════════════════════════════════════════════ */
+.grid-overlay {
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,245,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,245,255,.018) 1px,transparent 1px);
+  background-size:56px 56px;
+}
+.scanlines {
+  position:fixed; inset:0; z-index:3; pointer-events:none;
+  background: repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 4px);
+}
+
+/* ═══════════════════════════════════════════════
+   CORNER BRACKETS
+═══════════════════════════════════════════════ */
+.corner { position:fixed; width:48px; height:48px; border-style:solid; border-color:rgba(0,245,255,.25); z-index:100; pointer-events:none; }
+.c-tl { top:10px;left:10px; border-width:1px 0 0 1px; }
+.c-tr { top:10px;right:10px; border-width:1px 1px 0 0; }
+.c-bl { bottom:10px;left:10px; border-width:0 0 1px 1px; }
+.c-br { bottom:10px;right:10px; border-width:0 1px 1px 0; }
+
+/* ═══════════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════════ */
+#app {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  z-index:10; padding:14px 16px;
+  gap:12px;
+}
+
+/* ── TOP BAR ── */
+#topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  flex-shrink:0;
+  padding:10px 20px;
+  background: rgba(4,8,24,.7);
+  border:1px solid rgba(0,245,255,.12);
+  border-radius:10px;
+  backdrop-filter:blur(16px);
+  animation: fadeDown .6s ease both;
+}
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px);}to{opacity:1;transform:translateY(0);} }
+
+.brand {
+  font-family:'Orbitron',monospace; font-weight:900; font-size:18px; letter-spacing:.16em;
+  background:linear-gradient(90deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.top-center {
+  font-family:'Orbitron',monospace; font-size:9px; letter-spacing:.3em;
+  color:rgba(255,255,255,.25); text-transform:uppercase;
+}
+#backBtn {
+  display:flex; align-items:center; gap:8px;
+  font-family:'Orbitron',monospace; font-size:9px; font-weight:700; letter-spacing:.2em;
+  color:var(--cyan); background:rgba(0,245,255,.06);
+  border:1px solid rgba(0,245,255,.25); border-radius:6px;
+  padding:8px 16px; cursor:none;
+  transition:all .25s;
+}
+#backBtn:hover {
+  background:rgba(0,245,255,.14);
+  box-shadow:0 0 18px rgba(0,245,255,.3);
+}
+#backBtn svg { width:12px; height:12px; stroke:var(--cyan); fill:none; stroke-width:2; }
+
+/* ── MAIN CONTENT ROW ── */
+#main {
+  display:flex; gap:12px;
+  flex:1; min-height:0;
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+#sidebar {
+  width:220px; flex-shrink:0;
+  display:flex; flex-direction:column; gap:10px;
+  animation: fadeLeft .7s .1s ease both;
+}
+@keyframes fadeLeft { from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:translateX(0);} }
+
+.sidebar-label {
+  font-family:'Orbitron',monospace; font-size:8px; letter-spacing:.35em;
+  color:rgba(255,255,255,.2); text-transform:uppercase;
+  padding:0 4px; margin-bottom:2px;
+}
+
+.tab {
+  position:relative; display:flex; align-items:center; gap:14px;
+  padding:16px 18px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(6,12,34,.5);
+  backdrop-filter:blur(18px);
+  cursor:none;
+  transition:all .3s cubic-bezier(.22,1,.36,1);
+  overflow:hidden;
+}
+.tab::before {
+  content:'';
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+  border-radius:3px 0 0 3px;
+  background: var(--tc);
+  opacity:0; transition:opacity .3s;
+}
+.tab::after {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at left center, var(--tc-dim) 0%, transparent 70%);
+  opacity:0; transition:opacity .4s;
+}
+.tab:hover { border-color:rgba(255,255,255,.14); transform:translateX(4px); }
+.tab:hover::after { opacity:1; }
+.tab.active {
+  border-color: var(--tc);
+  background:rgba(6,14,36,.75);
+  box-shadow: 0 0 0 1px var(--tc-dim), 0 4px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
+  transform:translateX(6px);
+}
+.tab.active::before { opacity:1; }
+.tab.active::after { opacity:.7; }
+
+.tab-icon {
+  width:40px; height:40px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; flex-shrink:0;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  transition:all .3s;
+  position:relative; z-index:1;
+}
+.tab.active .tab-icon {
+  background: var(--tc-dim);
+  border-color: var(--tc);
+  box-shadow:0 0 16px var(--tc-dim);
+}
+
+.tab-info { position:relative; z-index:1; }
+.tab-name {
+  font-family:'Orbitron',monospace; font-weight:700; font-size:11px;
+  letter-spacing:.08em; color:rgba(200,220,255,.75);
+  margin-bottom:3px; transition:color .3s;
+}
+.tab.active .tab-name { color:var(--tc); text-shadow:0 0 12px var(--tc-dim); }
+.tab-sub { font-size:9px; letter-spacing:.12em; color:rgba(150,170,210,.35); }
+.tab.active .tab-sub { color:rgba(255,255,255,.45); }
+
+/* Chapter count badge */
+.tab-badge {
+  position:absolute; top:10px; right:12px;
+  font-family:'Orbitron',monospace; font-size:8px; font-weight:700;
+  color:var(--tc); background:var(--tc-dim2);
+  border:1px solid var(--tc-dim);
+  border-radius:10px; padding:2px 7px;
+  letter-spacing:.1em;
+}
+
+/* Progress bar at bottom of tab */
+.tab-progress {
+  position:absolute; bottom:0; left:0; right:0; height:2px;
+  background:rgba(255,255,255,.04);
+}
+.tab-progress-fill {
+  height:100%; background:var(--tc);
+  border-radius:1px; opacity:.5;
+  width:var(--pw);
+}
+
+/* ═══════════════════════════════════════════════
+   CONTENT PANEL
+═══════════════════════════════════════════════ */
+#content {
+  flex:1; display:flex; flex-direction:column; gap:12px;
+  min-width:0; overflow:hidden;
+  animation: fadeRight .7s .15s ease both;
+}
+@keyframes fadeRight { from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);} }
+
+/* ── Subject Header ── */
+#subject-header {
+  padding:18px 24px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(6,12,34,.55);
+  backdrop-filter:blur(20px);
+  display:flex; align-items:center; justify-content:space-between;
+  flex-shrink:0;
+}
+.subject-title-wrap { display:flex; align-items:center; gap:16px; }
+.subject-big-icon {
+  width:52px; height:52px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px;
+  background:var(--ac-dim2);
+  border:1px solid var(--ac-dim);
+  box-shadow:0 0 20px var(--ac-dim);
+}
+#subject-name {
+  font-family:'Orbitron',monospace; font-weight:900; font-size:22px;
+  letter-spacing:.1em; color:var(--ac);
+  text-shadow:0 0 24px var(--ac-dim);
+}
+#subject-tagline { font-size:10px; letter-spacing:.2em; color:rgba(200,220,255,.35); margin-top:4px; }
+.subject-stats { display:flex; gap:20px; }
+.stat-chip {
+  text-align:center;
+  padding:8px 16px;
+  border-radius:8px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+}
+.stat-num {
+  font-family:'Orbitron',monospace; font-size:18px; font-weight:700;
+  color:var(--ac); display:block;
+}
+.stat-label { font-size:8px; letter-spacing:.2em; color:rgba(200,220,255,.3); }
+
+/* ── Chapter Grid ── */
+#chapter-area {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  padding-right:4px;
+}
+#chapter-area::-webkit-scrollbar { width:4px; }
+#chapter-area::-webkit-scrollbar-track { background:transparent; }
+#chapter-area::-webkit-scrollbar-thumb { background:rgba(0,245,255,.2); border-radius:2px; }
+
+.section-label {
+  font-family:'Orbitron',monospace; font-size:8px; letter-spacing:.35em;
+  color:rgba(255,255,255,.18); text-transform:uppercase;
+  margin-bottom:10px; padding-left:2px;
+}
+
+.chapter-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.chapter-card {
+  position:relative; cursor:none; overflow:hidden;
+  padding:14px 16px 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.07);
+  background: linear-gradient(135deg, rgba(8,16,40,.65) 0%, rgba(4,8,24,.75) 100%);
+  backdrop-filter:blur(16px);
+  transition:all .3s cubic-bezier(.22,1,.36,1);
+  animation: cardPop var(--cp-dur,.4s) var(--cp-delay,0s) ease both;
+}
+@keyframes cardPop { from{opacity:0;transform:scale(.94) translateY(8px);} to{opacity:1;transform:scale(1) translateY(0);} }
+
+.chapter-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 30% 40%, var(--cc-glow) 0%, transparent 65%);
+  opacity:0; transition:opacity .35s;
+}
+.chapter-card:hover {
+  border-color:var(--cc);
+  box-shadow:0 0 0 1px var(--cc-dim), 0 8px 28px rgba(0,0,0,.5);
+  transform:translateY(-3px) scale(1.02);
+}
+.chapter-card:hover::before { opacity:1; }
+
+/* Top accent bar */
+.card-bar { position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cc),transparent); }
+
+.ch-num {
+  font-family:'Orbitron',monospace; font-size:9px; font-weight:700;
+  color:var(--cc); letter-spacing:.2em; margin-bottom:6px;
+  opacity:.7;
+}
+.ch-title {
+  font-family:'Orbitron',monospace; font-size:11px; font-weight:600;
+  letter-spacing:.06em; color:rgba(210,230,255,.85);
+  line-height:1.4; margin-bottom:8px;
+}
+.ch-desc { font-size:9px; letter-spacing:.06em; color:rgba(160,185,230,.4); line-height:1.55; }
+
+/* Bottom row */
+.card-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:10px; padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.ch-type {
+  font-size:8px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--cc); opacity:.6;
+}
+.ch-arrow {
+  width:20px; height:20px; border-radius:5px;
+  background:var(--cc-dim2);
+  border:1px solid var(--cc-dim);
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s;
+}
+.chapter-card:hover .ch-arrow {
+  background:var(--cc-dim);
+  box-shadow:0 0 10px var(--cc-dim);
+}
+.ch-arrow svg { width:8px; height:8px; stroke:var(--cc); fill:none; stroke-width:2.5; }
+
+/* Locked state */
+.chapter-card.locked { opacity:.4; }
+.chapter-card.locked:hover { transform:none; border-color:rgba(255,255,255,.07); box-shadow:none; }
+.lock-badge {
+  position:absolute; top:10px; right:10px;
+  font-size:10px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:5px; padding:2px 5px;
+}
+
+/* ── Status footer ── */
+#status-bar {
+  display:flex; gap:20px; align-items:center;
+  flex-shrink:0;
+  padding:10px 20px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.05);
+  background:rgba(4,8,20,.6);
+  backdrop-filter:blur(12px);
+}
+.s-pip { display:flex; align-items:center; gap:7px; font-size:9px; letter-spacing:.18em; color:rgba(255,255,255,.25); }
+.pip { width:5px; height:5px; border-radius:50%; animation:pipblink 2s ease-in-out infinite; }
+@keyframes pipblink { 0%,100%{opacity:1;} 50%{opacity:.15;} }
+
+/* ═══════════════════════════════════════════════
+   HOLOGRAPHIC SCAN LINE ON CONTENT
+═══════════════════════════════════════════════ */
+#content::after {
+  content:''; pointer-events:none;
+  position:absolute; left:0; right:0; height:80px;
+  background:linear-gradient(to bottom, transparent, rgba(0,245,255,.015), transparent);
+  animation:scanline 6s linear infinite;
+  z-index:50;
+}
+@keyframes scanline { 0%{top:-80px;} 100%{top:100%;} }
+
+/* Transition animation for content switch */
+.content-fade-out { animation:cfadeout .2s ease forwards; }
+.content-fade-in  { animation:cfadein  .3s ease forwards; }
+@keyframes cfadeout { to{opacity:0;transform:translateY(6px);} }
+@keyframes cfadein  { from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);} }
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- BG layers -->
+<canvas id="starCanvas"></canvas>
+<div class="nebula n1"></div>
+<div class="nebula n2"></div>
+<div class="nebula n3"></div>
+<div class="grid-overlay"></div>
+<div class="scanlines"></div>
+
+<!-- Corners -->
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
+
+<!-- Ghost rocket fleet -->
+<div class="ghost-fleet" id="fleet"></div>
+
+<!-- Shooting stars -->
+<div id="shooters"></div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div id="app">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <span class="brand">NEBULA-8</span>
+    <span class="top-center">Subject Dashboard · Grade 8</span>
+    <button id="backBtn" onclick="window.location.href='nebula8.html'">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Universe
+    </button>
+  </div>
+
+  <!-- Main row -->
+  <div id="main">
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div class="sidebar-label">Subjects</div>
+
+      <div class="tab active" data-subject="math"
+           style="--tc:var(--cyan);--tc-dim:rgba(0,245,255,.25);--tc-dim2:rgba(0,245,255,.08);--pw:42%;">
+        <div class="tab-icon">∑</div>
+        <div class="tab-info">
+          <div class="tab-name">Mathematics</div>
+          <div class="tab-sub">Ganit Prakash I &amp; II</div>
+        </div>
+        <div class="tab-badge">14</div>
+        <div class="tab-progress"><div class="tab-progress-fill"></div></div>
+      </div>
+
+      <div class="tab" data-subject="science"
+           style="--tc:var(--lime);--tc-dim:rgba(170,255,0,.25);--tc-dim2:rgba(170,255,0,.08);--pw:33%;">
+        <div class="tab-icon">⚛</div>
+        <div class="tab-info">
+          <div class="tab-name">Science</div>
+          <div class="tab-sub">Curiosity</div>
+        </div>
+        <div class="tab-badge">12</div>
+        <div class="tab-progress"><div class="tab-progress-fill"></div></div>
+      </div>
+
+      <div class="tab" data-subject="english"
+           style="--tc:var(--pink);--tc-dim:rgba(255,46,245,.25);--tc-dim2:rgba(255,46,245,.08);--pw:50%;">
+        <div class="tab-icon">✦</div>
+        <div class="tab-info">
+          <div class="tab-name">English</div>
+          <div class="tab-sub">Honeydew · It So Happened</div>
+        </div>
+        <div class="tab-badge">16</div>
+        <div class="tab-progress"><div class="tab-progress-fill"></div></div>
+      </div>
+
+      <div class="tab" data-subject="social"
+           style="--tc:var(--amber);--tc-dim:rgba(255,191,0,.25);--tc-dim2:rgba(255,191,0,.08);--pw:23%;">
+        <div class="tab-icon">◈</div>
+        <div class="tab-info">
+          <div class="tab-name">Social Science</div>
+          <div class="tab-sub">Exploring Society</div>
+        </div>
+        <div class="tab-badge">13</div>
+        <div class="tab-progress"><div class="tab-progress-fill"></div></div>
+      </div>
+
+      <!-- Spacer + system info -->
+      <div style="flex:1;"></div>
+      <div style="padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(4,8,20,.5);">
+        <div style="font-size:8px;letter-spacing:.2em;color:rgba(255,255,255,.18);margin-bottom:8px;">SYSTEM</div>
+        <div style="font-size:9px;color:rgba(0,245,255,.5);margin-bottom:4px;">● NEBULA-8 v2.4</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.2);">Grade 8 · 2025–26</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.2);margin-top:2px;">55 Chapters Total</div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div id="content" style="position:relative;">
+      <!-- Subject Header -->
+      <div id="subject-header">
+        <div class="subject-title-wrap">
+          <div class="subject-big-icon" id="subjectIcon"
+               style="--ac:var(--cyan);--ac-dim:rgba(0,245,255,.3);--ac-dim2:rgba(0,245,255,.1);">∑</div>
+          <div>
+            <div id="subject-name" style="--ac:var(--cyan);--ac-dim:rgba(0,245,255,.4);">Mathematics</div>
+            <div id="subject-tagline">Ganit Prakash — Part I &amp; II · CBSE Class 8 · New NCERT 2024–25</div>
+          </div>
+        </div>
+        <div class="subject-stats">
+          <div class="stat-chip" style="--ac:var(--cyan);">
+            <span class="stat-num" id="statChapters">14</span>
+            <span class="stat-label">Chapters</span>
+          </div>
+          <div class="stat-chip" style="--ac:var(--cyan);">
+            <span class="stat-num" id="statProgress">42%</span>
+            <span class="stat-label">Progress</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chapter Grid Area -->
+      <div id="chapter-area">
+        <div class="section-label">Chapter Index</div>
+        <div class="chapter-grid" id="chapterGrid"></div>
+      </div>
+
+      <!-- Status bar -->
+      <div id="status-bar">
+        <div class="s-pip"><div class="pip" style="background:#AAFF00;box-shadow:0 0 5px #AAFF00;"></div>Systems Online</div>
+        <div class="s-pip"><div class="pip" style="background:var(--cyan);box-shadow:0 0 5px var(--cyan);animation-delay:.7s;"></div>Content Loaded</div>
+        <div class="s-pip"><div class="pip" style="background:var(--pink);box-shadow:0 0 5px var(--pink);animation-delay:1.3s;"></div>Ready</div>
+        <div style="flex:1;"></div>
+        <div style="font-size:8px;letter-spacing:.2em;color:rgba(255,255,255,.15);" id="clockDisplay"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+/* ════════════════════════════════════════
+   SUBJECT DATA
+════════════════════════════════════════ */
+const subjects = {
+
+  // ── MATHEMATICS: Ganit Prakash Part I & II (New NCERT 2024–25) ──────────────
+  math: {
+    name: 'Mathematics', icon: '∑',
+    tagline: 'Ganit Prakash — Part I & II · CBSE Class 8 · New NCERT 2024–25',
+    color: 'var(--cyan)', colorRgb: '0,245,255',
+    chapters: 14, progress: '42%',
+    data: [
+      // ── Part I ──
+      { num: 'GP-I · CH-1',  title: 'Rational Numbers',
+        desc: 'Properties of rational numbers — closure, commutativity, associativity, distributivity. Representation on number line and finding rationals between two rationals.',
+        type: 'Part I', locked: false },
+      { num: 'GP-I · CH-2',  title: 'Linear Equations in One Variable',
+        desc: 'Solving linear equations with variables on both sides. Word problems involving ages, perimeter, numbers and more.',
+        type: 'Part I', locked: false },
+      { num: 'GP-I · CH-3',  title: 'Understanding Quadrilaterals',
+        desc: 'Polygons and their classification. Angle sum properties of quadrilaterals. Properties of parallelogram, rhombus, rectangle, square, kite and trapezium.',
+        type: 'Part I', locked: false },
+      { num: 'GP-I · CH-4',  title: 'Data Handling',
+        desc: 'Organising data, frequency distribution, bar graphs, pie charts, histograms. Introduction to probability with real-life situations.',
+        type: 'Part I', locked: false },
+      { num: 'GP-I · CH-5',  title: 'Squares and Square Roots',
+        desc: 'Properties of perfect squares, Pythagorean triplets. Methods to find square roots — repeated subtraction, prime factorisation and long division.',
+        type: 'Part I', locked: false },
+      { num: 'GP-I · CH-6',  title: 'Cubes and Cube Roots',
+        desc: 'Properties of perfect cubes, interesting cube patterns. Finding cube roots using prime factorisation and estimation.',
+        type: 'Part I', locked: false },
+      { num: 'GP-I · CH-7',  title: 'Comparing Quantities',
+        desc: 'Ratios and percentages, profit-loss and discount. Simple interest, compound interest and its applications in real life.',
+        type: 'Part I', locked: false },
+      // ── Part II ──
+      { num: 'GP-II · CH-8', title: 'Algebraic Expressions and Identities',
+        desc: 'Multiplication of algebraic expressions. Standard identities: (a±b)², (a+b)(a−b), (x+a)(x+b). Applying identities for fast calculations.',
+        type: 'Part II', locked: false },
+      { num: 'GP-II · CH-9', title: 'Mensuration',
+        desc: 'Area of trapezium, general quadrilaterals and polygons. Surface area and volume of cubes, cuboids and cylinders.',
+        type: 'Part II', locked: false },
+      { num: 'GP-II · CH-10', title: 'Exponents and Powers',
+        desc: 'Laws of exponents with integral and negative exponents. Use of exponents in expressing very large and very small numbers in standard form.',
+        type: 'Part II', locked: true },
+      { num: 'GP-II · CH-11', title: 'Direct and Inverse Proportions',
+        desc: 'Identifying and solving problems on direct and inverse proportion. Real-life applications involving speed, time and work.',
+        type: 'Part II', locked: true },
+      { num: 'GP-II · CH-12', title: 'Factorisation',
+        desc: 'Factorisation by common factors, regrouping, using identities. Division of algebraic expressions and finding errors in algebraic solutions.',
+        type: 'Part II', locked: true },
+      { num: 'GP-II · CH-13', title: 'Introduction to Graphs',
+        desc: 'Bar graphs, pie charts, histograms and line graphs. Plotting linear graphs. Reading and interpreting graphs in real-life contexts.',
+        type: 'Part II', locked: true },
+      { num: 'GP-II · CH-14', title: 'Playing with Numbers',
+        desc: 'Numbers in general form, games with numbers. Divisibility tests for 2, 3, 5, 9, 10. Puzzles and riddles involving number patterns.',
+        type: 'Part II', locked: true },
+    ]
+  },
+
+  // ── SCIENCE: Curiosity — Class 8 (New NCERT 2024–25) ────────────────────────
+  science: {
+    name: 'Science', icon: '⚛',
+    tagline: 'Curiosity — Class 8 · CBSE New NCERT 2024–25',
+    color: 'var(--lime)', colorRgb: '170,255,0',
+    chapters: 12, progress: '33%',
+    data: [
+      { num: 'CUR · CH-1',  title: 'Sensing the Environment',
+        desc: 'How plants and animals sense and respond to their surroundings. Nervous system basics, sense organs, and stimulus-response mechanisms.',
+        type: 'Biology', locked: false },
+      { num: 'CUR · CH-2',  title: 'Reproduction in the Living World',
+        desc: 'Asexual and sexual reproduction in plants and animals. Pollination, fertilisation, development of embryo and seed dispersal.',
+        type: 'Biology', locked: false },
+      { num: 'CUR · CH-3',  title: 'Scratch Resistant and Shining — Metals',
+        desc: 'Physical and chemical properties of metals. Reactivity series, reactions of metals with water, acids and oxygen. Corrosion and its prevention.',
+        type: 'Chemistry', locked: false },
+      { num: 'CUR · CH-4',  title: 'The Enchanting World of Fibres',
+        desc: 'Natural vs synthetic fibres. How synthetic fibres like nylon, polyester and acrylic are made. Properties, uses and environmental impact of plastics.',
+        type: 'Chemistry', locked: false },
+      { num: 'CUR · CH-5',  title: 'Coal and Petroleum',
+        desc: 'Origin and formation of fossil fuels. Products of coal — coke, coal tar, coal gas. Refining of petroleum and its fractions.',
+        type: 'Chemistry', locked: false },
+      { num: 'CUR · CH-6',  title: 'Combustion: Fuels and Flame',
+        desc: 'Conditions for combustion, types of combustion, ignition temperature. Structure of a candle flame. Calorific value and environmental effects of burning fuels.',
+        type: 'Chemistry', locked: false },
+      { num: 'CUR · CH-7',  title: 'Electric Current and its Effects',
+        desc: 'Heating and magnetic effects of current. Electromagnets, electric bells and fuses. Symbols in electric circuits and safety measures.',
+        type: 'Physics', locked: false },
+      { num: 'CUR · CH-8',  title: 'The Magic of Reflection',
+        desc: 'Laws of reflection, regular and diffused reflection. Multiple images from multiple mirrors. Kaleidoscope, periscope and human eye.',
+        type: 'Physics', locked: true },
+      { num: 'CUR · CH-9',  title: 'Force and Friction',
+        desc: 'Types of forces: contact and non-contact. Pressure and its applications. Friction — causes, types, advantages, disadvantages and methods to control it.',
+        type: 'Physics', locked: true },
+      { num: 'CUR · CH-10', title: 'Reaching Out to the Stars',
+        desc: 'The Solar System, celestial bodies and the night sky. Introduction to telescopes. Space exploration milestones and India\'s ISRO missions.',
+        type: 'Physics', locked: true },
+      { num: 'CUR · CH-11', title: 'Microorganisms: Bacteria, Fungi and More',
+        desc: 'Types of microorganisms and their roles. Useful microbes in food, medicine and environment. Harmful microbes, diseases and vaccination.',
+        type: 'Biology', locked: true },
+      { num: 'CUR · CH-12', title: 'Conservation: Forests and Wildlife',
+        desc: 'Importance of forests, deforestation and its effects. Protected areas: sanctuaries, national parks and biosphere reserves. Endangered species of India.',
+        type: 'Biology', locked: true },
+    ]
+  },
+
+  // ── ENGLISH: Honeydew + It So Happened (Class 8, NCERT) ─────────────────────
+  english: {
+    name: 'English', icon: '✦',
+    tagline: 'Honeydew · It So Happened · CBSE Class 8 NCERT',
+    color: 'var(--pink)', colorRgb: '255,46,245',
+    chapters: 16, progress: '50%',
+    data: [
+      // ── Honeydew (Main Reader) ──
+      { num: 'HD · CH-1',   title: 'The Best Christmas Present in the World',
+        desc: 'A touching story by Michael Morpurgo about a letter from a WWI soldier. Themes: love, hope and the human cost of war.',
+        type: 'Honeydew', locked: false },
+      { num: 'HD · POEM-1', title: 'The Ant and the Cricket',
+        desc: 'An Aesop fable retold as a poem. The cricket\'s laziness in summer leads to hardship in winter — themes of industry and foresight.',
+        type: 'Honeydew · Poem', locked: false },
+      { num: 'HD · CH-2',   title: 'The Tsunami',
+        desc: 'True accounts of animal instinct and human courage during the 2004 Indian Ocean tsunami. Develops reading for information skills.',
+        type: 'Honeydew', locked: false },
+      { num: 'HD · POEM-2', title: 'Geography Lesson',
+        desc: 'Zulfikar Ghose\'s aerial perspective of Earth highlights absurdity of human divisions. Themes: unity, perspective and geography.',
+        type: 'Honeydew · Poem', locked: false },
+      { num: 'HD · CH-3',   title: 'Glimpses of the Past',
+        desc: 'A comic-strip style account of India under British rule, the reform movements and early seeds of the independence struggle.',
+        type: 'Honeydew', locked: false },
+      { num: 'HD · POEM-3', title: 'Macavity: The Mystery Cat',
+        desc: 'T. S. Eliot\'s witty portrait of a master criminal cat who is always absent from the scene of the crime. Tone and characterisation.',
+        type: 'Honeydew · Poem', locked: false },
+      { num: 'HD · CH-4',   title: 'Bepin Choudhury\'s Lapse of Memory',
+        desc: 'R. K. Narayan\'s comic story of a man tricked into believing he has memory loss. Themes: identity, trust and self-doubt.',
+        type: 'Honeydew', locked: false },
+      { num: 'HD · POEM-4', title: 'The Last Bargain',
+        desc: 'Rabindranath Tagore\'s poem on the quest for true freedom. The speaker declines power, wealth and beauty — only a child\'s invitation is accepted.',
+        type: 'Honeydew · Poem', locked: false },
+      { num: 'HD · CH-5',   title: 'The Summit Within',
+        desc: 'H. P. S. Ahluwalia\'s personal account of climbing Everest. Themes: perseverance, inner mountains and the philosophy of adventure.',
+        type: 'Honeydew', locked: true },
+      { num: 'HD · CH-6',   title: 'This is Jody\'s Fawn',
+        desc: 'Marjorie Kinnan Rawlings\' story of a boy who rescues an orphaned deer. Themes: empathy, responsibility and the bond with nature.',
+        type: 'Honeydew', locked: true },
+      { num: 'HD · CH-7',   title: 'A Visit to Cambridge',
+        desc: 'Firdaus Kanga\'s memoir of meeting Stephen Hawking — two people with disabilities find inspiration in each other\'s courage.',
+        type: 'Honeydew', locked: true },
+      { num: 'HD · CH-8',   title: 'A Short Monsoon Diary',
+        desc: 'Ruskin Bond\'s diary entries from Mussoorie capturing the beauty of the monsoon season through vivid nature imagery.',
+        type: 'Honeydew', locked: true },
+      // ── It So Happened (Supplementary Reader) ──
+      { num: 'ISH · CH-1',  title: 'How the Camel Got His Hump',
+        desc: 'Rudyard Kipling\'s Just So Story explaining why camels have humps — a lesson on laziness and its consequences, told with wit and humour.',
+        type: 'It So Happened', locked: false },
+      { num: 'ISH · CH-2',  title: 'Children at Work',
+        desc: 'A sobering story about child labour in India following Velu\'s journey from a village to Chennai, highlighting exploitation and resilience.',
+        type: 'It So Happened', locked: false },
+      { num: 'ISH · CH-3',  title: 'The Selfish Giant',
+        desc: 'Oscar Wilde\'s classic allegory about a giant who excludes children from his garden and faces eternal winter until he opens his heart.',
+        type: 'It So Happened', locked: true },
+      { num: 'ISH · CH-4',  title: 'The Open Window',
+        desc: 'Saki\'s masterful short story of a mischievous girl who spins a ghost story — a perfect study in suspense, irony and narrative twist.',
+        type: 'It So Happened', locked: true },
+    ]
+  },
+
+  // ── SOCIAL SCIENCE: Exploring Society: India and Beyond (New NCERT 2024–25) ─
+  social: {
+    name: 'Social Science', icon: '◈',
+    tagline: 'Exploring Society: India and Beyond · New NCERT 2024–25',
+    color: 'var(--amber)', colorRgb: '255,191,0',
+    chapters: 13, progress: '23%',
+    data: [
+      // ── History ──
+      { num: 'ES · CH-1',   title: 'When, Where and How',
+        desc: 'How historians study the past — sources, periodisation and timelines. Colonial impact on historical writing and record-keeping in India.',
+        type: 'History', locked: false },
+      { num: 'ES · CH-2',   title: 'The Rise of British Power in India',
+        desc: 'Establishment of the East India Company, conquest of Bengal, Battle of Plassey and Buxar. The gradual shift from trade to territorial control.',
+        type: 'History', locked: false },
+      { num: 'ES · CH-3',   title: 'Rural Life and Administration',
+        desc: 'Land revenue systems — Permanent Settlement, Ryotwari and Mahalwari. Impact on peasants and zamindars. Colonial agriculture and famines.',
+        type: 'History', locked: false },
+      { num: 'ES · CH-4',   title: 'Colonialism and Tribal Societies',
+        desc: 'Changes in forest laws and tribal livelihoods under British rule. The Santhal, Birsa Munda and other tribal uprisings against colonial authority.',
+        type: 'History', locked: false },
+      { num: 'ES · CH-5',   title: 'The Revolt of 1857',
+        desc: 'Causes, course and consequences of the 1857 uprising. Role of sepoys, peasants and rulers. Why the revolt failed and its lasting legacy.',
+        type: 'History', locked: false },
+      { num: 'ES · CH-6',   title: 'Civilising the "Native", Educating the Nation',
+        desc: 'Colonial education policy — Macaulay\'s Minute and the Wood\'s Dispatch. Rise of Indian reformers and debates about language and education.',
+        type: 'History', locked: false },
+      // ── Geography ──
+      { num: 'ES · CH-7',   title: 'Resources: Types and Conservation',
+        desc: 'Classification of resources — natural, human-made and human. Sustainable development, resource planning and conservation strategies.',
+        type: 'Geography', locked: false },
+      { num: 'ES · CH-8',   title: 'Land, Soil, Water and Natural Vegetation',
+        desc: 'Land use patterns, types of soil and soil erosion. Water scarcity and watershed management. Natural vegetation zones across India.',
+        type: 'Geography', locked: true },
+      { num: 'ES · CH-9',   title: 'Agriculture: Types and Patterns',
+        desc: 'Types of farming — subsistence, commercial and plantation. Major crops of India, cropping seasons and the Green Revolution.',
+        type: 'Geography', locked: true },
+      { num: 'ES · CH-10',  title: 'Industries and Economic Development',
+        desc: 'Classification of industries, agro-based and mineral-based industries. Case study: Iron & Steel and Textile industries. Industrial pollution.',
+        type: 'Geography', locked: true },
+      // ── Civics / Political Science ──
+      { num: 'ES · CH-11',  title: 'The Indian Constitution',
+        desc: 'Why we need a constitution. Key features — federalism, separation of powers, fundamental rights and duties. Constitutional amendments.',
+        type: 'Civics', locked: false },
+      { num: 'ES · CH-12',  title: 'Parliament and the Making of Laws',
+        desc: 'Structure of the Indian Parliament — Lok Sabha and Rajya Sabha. How laws are made, the role of opposition and the importance of debates.',
+        type: 'Civics', locked: true },
+      { num: 'ES · CH-13',  title: 'The Judiciary',
+        desc: 'Structure of courts in India. The role of the Supreme Court, High Courts and district courts. Public Interest Litigation and access to justice.',
+        type: 'Civics', locked: true },
+    ]
+  }
+};
+
+/* ════════════════════════════════════════
+   ACTIVE STATE
+════════════════════════════════════════ */
+let activeSubject = 'math';
+
+const colorMap = {
+  math:    { color:'var(--cyan)',   rgb:'0,245,255',   acDim:'rgba(0,245,255,.35)',   acDim2:'rgba(0,245,255,.1)'   },
+  science: { color:'var(--lime)',   rgb:'170,255,0',   acDim:'rgba(170,255,0,.35)',   acDim2:'rgba(170,255,0,.1)'   },
+  english: { color:'var(--pink)',   rgb:'255,46,245',  acDim:'rgba(255,46,245,.35)',  acDim2:'rgba(255,46,245,.1)'  },
+  social:  { color:'var(--amber)',  rgb:'255,191,0',   acDim:'rgba(255,191,0,.35)',   acDim2:'rgba(255,191,0,.1)'   },
+};
+
+function renderSubject(key) {
+  const s = subjects[key];
+  const c = colorMap[key];
+  const grid = document.getElementById('chapterGrid');
+
+  // Animate out
+  grid.classList.remove('content-fade-in');
+  grid.classList.add('content-fade-out');
+  const hdr = document.getElementById('subject-header');
+  hdr.classList.add('content-fade-out');
+
+  setTimeout(() => {
+    // Update header
+    document.getElementById('subject-name').textContent = s.name;
+    document.getElementById('subject-name').style.setProperty('--ac', c.color);
+    document.getElementById('subject-name').style.setProperty('--ac-dim', c.acDim);
+    document.getElementById('subject-tagline').textContent = s.tagline;
+    document.getElementById('statChapters').textContent = s.chapters;
+    document.getElementById('statProgress').textContent = s.progress;
+
+    const icon = document.getElementById('subjectIcon');
+    icon.textContent = s.icon;
+    icon.style.setProperty('--ac', c.color);
+    icon.style.setProperty('--ac-dim', c.acDim);
+    icon.style.setProperty('--ac-dim2', c.acDim2);
+
+    // Update cursor color
+    document.documentElement.style.setProperty('--active-color', c.color);
+    document.getElementById('cursor').style.background = c.color;
+    document.getElementById('cursor').style.boxShadow = `0 0 10px ${c.color}, 0 0 20px ${c.color}`;
+    document.getElementById('cursor-ring').style.borderColor = c.color;
+
+    // Build chapter cards
+    grid.innerHTML = '';
+    s.data.forEach((ch, i) => {
+      const card = document.createElement('div');
+      card.className = 'chapter-card' + (ch.locked ? ' locked' : '');
+      card.style.setProperty('--cc', c.color);
+      card.style.setProperty('--cc-dim', c.acDim);
+      card.style.setProperty('--cc-dim2', c.acDim2);
+      card.style.setProperty('--cc-glow', `rgba(${c.rgb},.12)`);
+      card.style.setProperty('--cp-dur', '.4s');
+      card.style.setProperty('--cp-delay', `${i * 0.04}s`);
+
+      card.innerHTML = `
+        <div class="card-bar"></div>
+        ${ch.locked ? '<div class="lock-badge">🔒</div>' : ''}
+        <div class="ch-num">${ch.num}</div>
+        <div class="ch-title">${ch.title}</div>
+        <div class="ch-desc">${ch.desc}</div>
+        <div class="card-footer">
+          <span class="ch-type">${ch.type}</span>
+          <div class="ch-arrow">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+
+    grid.classList.remove('content-fade-out');
+    hdr.classList.remove('content-fade-out');
+    grid.classList.add('content-fade-in');
+    hdr.classList.add('content-fade-in');
+    setTimeout(() => { grid.classList.remove('content-fade-in'); hdr.classList.remove('content-fade-in'); }, 400);
+  }, 200);
+}
+
+/* ════════════════════════════════════════
+   TAB CLICKS
+════════════════════════════════════════ */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeSubject = tab.dataset.subject;
+    renderSubject(activeSubject);
+  });
+});
+
+// Initial render
+renderSubject('math');
+
+/* ════════════════════════════════════════
+   CURSOR
+════════════════════════════════════════ */
+const cursor     = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mx=0, my=0, rx=0, ry=0;
+document.addEventListener('mousemove', e => { mx=e.clientX; my=e.clientY; });
+function animCursor() {
+  rx += (mx - rx) * .18; ry += (my - ry) * .18;
+  cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+  cursorRing.style.left=rx+'px'; cursorRing.style.top=ry+'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+
+/* ════════════════════════════════════════
+   STAR CANVAS
+════════════════════════════════════════ */
+const canvas = document.getElementById('starCanvas');
+const ctx    = canvas.getContext('2d');
+let W, H, stars=[], shooters=[], t2=0;
+function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+for (let i=0; i<260; i++) {
+  stars.push({
+    x:Math.random(), y:Math.random(),
+    r:Math.random()*1.6+.3,
+    base:Math.random()*.65+.15,
+    speed:.4+Math.random()*1.8,
+    phase:Math.random()*Math.PI*2,
+    color:['#ffffff','#cce6ff','#ffe8cc','#eeccff'][Math.floor(Math.random()*4)],
+  });
+}
+function spawnShooter(){
+  const a=-(15+Math.random()*35)*Math.PI/180;
+  const sp=5+Math.random()*9;
+  shooters.push({ x:Math.random()*W*.8, y:Math.random()*H*.25,
+    vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
+    len:70+Math.random()*100, op:1, w:.5+Math.random()*1 });
+}
+setInterval(()=>{ if(Math.random()<.55) spawnShooter(); }, 1400);
+
+function drawStars(){
+  ctx.clearRect(0,0,W,H); t2+=.016;
+  stars.forEach(s=>{
+    const op=s.base*(.55+.45*Math.sin(t2*s.speed+s.phase));
+    ctx.beginPath(); ctx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
+    ctx.fillStyle=s.color; ctx.globalAlpha=op; ctx.fill();
+  });
+  shooters=shooters.filter(s=>s.op>0);
+  shooters.forEach(s=>{
+    const g=ctx.createLinearGradient(s.x,s.y,s.x-s.vx*(s.len/8),s.y-s.vy*(s.len/8));
+    g.addColorStop(0,`rgba(255,255,255,${s.op})`);
+    g.addColorStop(.4,`rgba(180,220,255,${s.op*.5})`);
+    g.addColorStop(1,'rgba(180,220,255,0)');
+    ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x-s.vx*(s.len/8),s.y-s.vy*(s.len/8));
+    ctx.strokeStyle=g; ctx.lineWidth=s.w; ctx.globalAlpha=1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.w*1.8,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${s.op*.8})`; ctx.globalAlpha=1; ctx.fill();
+    s.x+=s.vx; s.y+=s.vy; s.op-=.015;
+  });
+  ctx.globalAlpha=1;
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+/* ════════════════════════════════════════
+   GHOST ROCKET FLEET — full SVG rockets
+════════════════════════════════════════ */
+const fleet = document.getElementById('fleet');
+
+// Full detailed rocket SVG builder
+// rot = CSS rotation so nose points in direction of travel
+function makeSVGRocket(color, glowColor, scale) {
+  const s = scale || 1;
+  const w = Math.round(36 * s);
+  const h = Math.round(80 * s);
+  return `<svg viewBox="0 0 36 80" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="rg${Math.random().toString(36).slice(2,6)}">
+        <feGaussianBlur stdDeviation="1.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- Left fin -->
+    <path d="M14 52 C10 56 4 68 3 76 L13 70 C14 64 15 58 16 54 Z" fill="${color}"/>
+    <!-- Right fin -->
+    <path d="M22 52 C26 56 32 68 33 76 L23 70 C22 64 21 58 20 54 Z" fill="${color}"/>
+    <!-- Body -->
+    <path d="M18 2 C22 2 26 8 26 18 L25 56 C25 62 22 66 18 66 C14 66 11 62 11 56 L10 18 C10 8 14 2 18 2 Z" fill="${color}"/>
+    <!-- Nose cone highlight -->
+    <path d="M18 4 C20 4 23 10 23 18 L21 18 C21 10 19 5 18 4 Z" fill="rgba(255,255,255,0.25)"/>
+    <!-- Window -->
+    <ellipse cx="18" cy="28" rx="5" ry="5.5" fill="${glowColor}" opacity="0.5"/>
+    <ellipse cx="16.5" cy="26.5" rx="2" ry="1.5" fill="rgba(255,255,255,0.35)"/>
+    <!-- Body stripe -->
+    <rect x="11" y="42" width="14" height="1.5" rx="0.75" fill="rgba(255,255,255,0.2)"/>
+    <!-- Engine nozzle -->
+    <ellipse cx="18" cy="66" rx="7" ry="2.5" fill="rgba(0,0,0,0.4)"/>
+    <ellipse cx="18" cy="66" rx="5" ry="1.8" fill="${glowColor}" opacity="0.3"/>
+    <!-- Flame -->
+    <path d="M15 66 C14 70 13 76 15 80 C16 77 18 74 18 74 C18 74 20 77 21 80 C23 76 22 70 21 66 Z" fill="${glowColor}" opacity="0.55"/>
+    <path d="M16.5 66 C16 69 16 73 18 75 C20 73 20 69 19.5 66 Z" fill="rgba(255,255,255,0.4)"/>
+  </svg>`;
+}
+
+// Each rocket: { x, y, anim, dur, delay, rot, scale, opacity, color, glowColor }
+const fleetDefs = [
+  // Fast diagonal bottom-left → top-right (cyan)
+  { x:'2vw',  y:'75vh', anim:'rocketDrift1',  dur:'18s', delay:'0s',    rot:'-30deg', scale:.9,  opacity:.13, color:'rgba(0,200,220,0.9)',   glow:'#00F5FF' },
+  // Slow right→left (lime)
+  { x:'92vw', y:'18vh', anim:'rocketDrift2',  dur:'38s', delay:'-10s',  rot:'155deg', scale:1.2, opacity:.10, color:'rgba(140,220,0,0.9)',   glow:'#AAFF00' },
+  // Medium vertical (pink)
+  { x:'48vw', y:'92vh', anim:'rocketDrift3',  dur:'22s', delay:'-5s',   rot:'-5deg',  scale:.7,  opacity:.12, color:'rgba(220,30,210,0.9)',  glow:'#FF2EF5' },
+  // Fast left→right (amber)
+  { x:'1vw',  y:'42vh', anim:'rocketDrift4',  dur:'16s', delay:'-8s',   rot:'-20deg', scale:.8,  opacity:.11, color:'rgba(220,160,0,0.9)',   glow:'#FFBF00' },
+  // Slow bottom→top (cyan)
+  { x:'72vw', y:'95vh', anim:'rocketDrift5',  dur:'42s', delay:'-3s',   rot:'-8deg',  scale:1.4, opacity:.08, color:'rgba(0,200,220,0.9)',   glow:'#00F5FF' },
+  // Medium left→right diagonal (lime)
+  { x:'0vw',  y:'62vh', anim:'rocketDrift6',  dur:'24s', delay:'-14s',  rot:'-28deg', scale:.65, opacity:.13, color:'rgba(140,220,0,0.9)',   glow:'#AAFF00' },
+  // Fast vertical (pink)
+  { x:'58vw', y:'96vh', anim:'rocketDrift7',  dur:'14s', delay:'-6s',   rot:'4deg',   scale:.55, opacity:.14, color:'rgba(220,30,210,0.9)',  glow:'#FF2EF5' },
+  // Very slow right→left (amber)
+  { x:'96vw', y:'55vh', anim:'rocketDrift8',  dur:'50s', delay:'-25s',  rot:'168deg', scale:1.6, opacity:.07, color:'rgba(220,160,0,0.9)',   glow:'#FFBF00' },
+  // Fast small bottom→top (cyan)
+  { x:'22vw', y:'102vh',anim:'rocketDrift9',  dur:'13s', delay:'-2s',   rot:'-12deg', scale:.5,  opacity:.15, color:'rgba(0,200,220,0.9)',   glow:'#00F5FF' },
+  // Medium left→right (lime)
+  { x:'0vw',  y:'82vh', anim:'rocketDrift10', dur:'30s', delay:'-20s',  rot:'-22deg', scale:1.0, opacity:.10, color:'rgba(140,220,0,0.9)',   glow:'#AAFF00' },
+  // Extra — slow diagonal (pink)
+  { x:'35vw', y:'98vh', anim:'rocketDrift1',  dur:'45s', delay:'-30s',  rot:'-15deg', scale:1.1, opacity:.09, color:'rgba(220,30,210,0.9)',  glow:'#FF2EF5' },
+  // Extra — fast small (amber)
+  { x:'4vw',  y:'18vh', anim:'rocketDrift4',  dur:'11s', delay:'-4s',   rot:'-35deg', scale:.45, opacity:.16, color:'rgba(220,160,0,0.9)',   glow:'#FFBF00' },
+  // Extra — slow large (cyan)
+  { x:'78vw', y:'88vh', anim:'rocketDrift5',  dur:'55s', delay:'-40s',  rot:'-6deg',  scale:1.8, opacity:.06, color:'rgba(0,200,220,0.9)',   glow:'#00F5FF' },
+];
+
+fleetDefs.forEach(r => {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `
+    position: absolute;
+    left: ${r.x};
+    top: ${r.y};
+    opacity: ${r.opacity};
+    transform: rotate(${r.rot});
+    animation: ${r.anim} ${r.dur} linear infinite;
+    animation-delay: ${r.delay};
+    pointer-events: none;
+    filter: drop-shadow(0 0 6px ${r.glow}) drop-shadow(0 0 14px ${r.glow});
+    will-change: transform;
+  `;
+  wrap.innerHTML = makeSVGRocket(r.color, r.glow, r.scale);
+  fleet.appendChild(wrap);
+});
+
+/* ════════════════════════════════════════
+   CLOCK
+════════════════════════════════════════ */
+function updateClock() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-US',{hour12:false});
+  document.getElementById('clockDisplay').textContent = `UTC ${t}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+</body>
+</html>
