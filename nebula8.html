@@ -771,13 +771,13 @@ function updateParallax() {
 }
 updateParallax();
 
-/* ── START BUTTON → ZOOM TRANSITION ─────────────────────── */
+/* ── START BUTTON → ZOOM TRANSITION → DASHBOARD ─────────── */
 const overlay = document.getElementById('zoomOverlay');
 document.getElementById('startBtn').addEventListener('click', () => {
   overlay.classList.add('active');
-  // After animation, you'd navigate: window.location.href = 'subjects.html';
-  // For demo we reset after 1.8s
-  setTimeout(() => { overlay.classList.remove('active'); }, 1800);
+  setTimeout(() => {
+    window.location.href = 'nebula8-dashboard.html';
+  }, 1200);
 });
 </script>
 </body>
