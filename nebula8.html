@@ -306,6 +306,103 @@
   .dl1 { top: 30%; left: 15%; transform: rotate(30deg); }
   .dl2 { top: 10%; right: 20%; transform: rotate(-25deg); }
   .dl3 { bottom: 20%; right: 10%; transform: rotate(15deg); }
+
+  /* ── AUDIO TOGGLE BUTTON ─────────────────────────────── */
+  #audioBtn {
+    position: fixed;
+    top: 50%;
+    right: 28px;
+    transform: translateY(-50%);
+    z-index: 300;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,245,255,.35);
+    background: rgba(4,3,15,.75);
+    backdrop-filter: blur(12px);
+    cursor: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .3s, box-shadow .3s, transform .2s;
+    box-shadow: 0 0 16px rgba(0,245,255,.15), inset 0 0 12px rgba(0,245,255,.04);
+    animation: fadeDown .8s 1.6s ease both;
+  }
+  #audioBtn:hover {
+    border-color: rgba(0,245,255,.8);
+    box-shadow: 0 0 28px rgba(0,245,255,.45), inset 0 0 16px rgba(0,245,255,.1);
+    transform: translateY(-50%) scale(1.1);
+  }
+  #audioBtn:active { transform: translateY(-50%) scale(.94); }
+
+  /* Waveform bars — shown when playing */
+  .wave-bars {
+    display: flex;
+    align-items: center;
+    gap: 2.5px;
+    height: 18px;
+  }
+  .wave-bars span {
+    display: block;
+    width: 3px;
+    background: var(--cyan);
+    border-radius: 2px;
+    box-shadow: 0 0 6px var(--cyan);
+    animation: barBounce var(--bd) ease-in-out infinite alternate;
+    transform-origin: bottom;
+  }
+  .wave-bars span:nth-child(1) { height: 8px;  --bd: .35s; }
+  .wave-bars span:nth-child(2) { height: 16px; --bd: .28s; animation-delay: .06s; }
+  .wave-bars span:nth-child(3) { height: 11px; --bd: .42s; animation-delay: .12s; }
+  .wave-bars span:nth-child(4) { height: 16px; --bd: .31s; animation-delay: .04s; }
+  .wave-bars span:nth-child(5) { height: 7px;  --bd: .38s; animation-delay: .09s; }
+  @keyframes barBounce {
+    from { transform: scaleY(1); }
+    to   { transform: scaleY(.25); }
+  }
+
+  /* Muted icon — shown when muted */
+  .mute-icon {
+    display: none;
+    width: 18px; height: 18px;
+    position: relative;
+  }
+  .mute-icon svg { width: 18px; height: 18px; }
+
+  /* State toggling */
+  #audioBtn.muted .wave-bars { display: none; }
+  #audioBtn.muted .mute-icon { display: flex; align-items: center; justify-content: center; }
+
+  /* Pulse ring when playing */
+  #audioBtn::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,245,255,.2);
+    animation: audioRingPulse 2.4s ease-in-out infinite;
+  }
+  #audioBtn.muted::before { animation: none; opacity: 0; }
+  @keyframes audioRingPulse {
+    0%,100% { transform: scale(1);    opacity: .7; }
+    50%      { transform: scale(1.18); opacity: 0; }
+  }
+
+  /* Tooltip label */
+  #audioBtn::after {
+    content: attr(data-tip);
+    position: absolute;
+    right: calc(100% + 12px);
+    top: 50%; transform: translateY(-50%);
+    font-family: 'Orbitron', monospace;
+    font-size: 8px; letter-spacing: .18em;
+    color: rgba(0,245,255,.6);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity .2s;
+    pointer-events: none;
+  }
+  #audioBtn:hover::after { opacity: 1; }
 </style>
 </head>
 <body>
@@ -377,7 +474,6 @@
     <!-- SVG Rocket -->
     <svg class="rocket-svg" viewBox="0 0 200 340" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <!-- Body: cool steel blue, side-lit -->
         <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%"   stop-color="#061828"/>
           <stop offset="30%"  stop-color="#0d3a5c"/>
@@ -385,13 +481,11 @@
           <stop offset="80%"  stop-color="#0a2e4a"/>
           <stop offset="100%" stop-color="#040e1a"/>
         </linearGradient>
-        <!-- Nose: icy cyan to deep navy -->
         <linearGradient id="noseGrad" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%"   stop-color="#003d55"/>
           <stop offset="45%"  stop-color="#00b8d4"/>
           <stop offset="100%" stop-color="#002535"/>
         </linearGradient>
-        <!-- Swept delta wings: very dark, edged -->
         <linearGradient id="wingL" x1="1" y1="0" x2="0" y2="1">
           <stop offset="0%"   stop-color="#0c2d48"/>
           <stop offset="100%" stop-color="#020a12"/>
@@ -400,30 +494,25 @@
           <stop offset="0%"   stop-color="#0c2d48"/>
           <stop offset="100%" stop-color="#020a12"/>
         </linearGradient>
-        <!-- Engine bell gradient -->
         <linearGradient id="bellGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stop-color="#1a4f7a"/>
           <stop offset="100%" stop-color="#030d18"/>
         </linearGradient>
-        <!-- Thruster inner -->
         <radialGradient id="thrusterGrad" cx="50%" cy="30%" r="60%">
           <stop offset="0%"   stop-color="#00F5FF" stop-opacity=".5"/>
           <stop offset="100%" stop-color="#020a14" stop-opacity="1"/>
         </radialGradient>
-        <!-- Window -->
         <radialGradient id="windowGrad" cx="38%" cy="35%" r="55%">
           <stop offset="0%"   stop-color="#80ffff" stop-opacity=".9"/>
           <stop offset="45%"  stop-color="#0077cc" stop-opacity=".8"/>
           <stop offset="100%" stop-color="#001020" stop-opacity="1"/>
         </radialGradient>
-        <!-- Vertical accent stripe -->
         <linearGradient id="stripeGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stop-color="#00F5FF" stop-opacity="0"/>
           <stop offset="20%"  stop-color="#00F5FF" stop-opacity=".7"/>
           <stop offset="80%"  stop-color="#00F5FF" stop-opacity=".5"/>
           <stop offset="100%" stop-color="#00F5FF" stop-opacity="0"/>
         </linearGradient>
-        <!-- Magenta accent stripe -->
         <linearGradient id="stripeM" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"   stop-color="#FF2EF5" stop-opacity="0"/>
           <stop offset="30%"  stop-color="#FF2EF5" stop-opacity=".5"/>
@@ -440,113 +529,59 @@
         </filter>
       </defs>
 
-      <!-- ═══ SWEPT-BACK DELTA WINGS ═══ -->
-      <!-- Left delta wing: starts at shoulder (x≈88,y=170), sweeps far left and down -->
       <path d="M88 168 C80 185, 42 220, 22 282 L62 268 C68 250, 80 215, 88 200 Z"
             fill="url(#wingL)" stroke="#0d4878" stroke-width=".8"/>
-      <!-- Left wing leading-edge cyan glow line -->
       <path d="M88 168 C80 185, 42 220, 22 282" fill="none" stroke="#00F5FF" stroke-width="1" stroke-opacity=".35"/>
-      <!-- Left wing inner crease -->
       <path d="M87 185 C82 200, 62 232, 48 268" fill="none" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".18"/>
-
-      <!-- Right delta wing: mirror -->
       <path d="M112 168 C120 185, 158 220, 178 282 L138 268 C132 250, 120 215, 112 200 Z"
             fill="url(#wingR)" stroke="#0d4878" stroke-width=".8"/>
       <path d="M112 168 C120 185, 158 220, 178 282" fill="none" stroke="#00F5FF" stroke-width="1" stroke-opacity=".35"/>
       <path d="M113 185 C118 200, 138 232, 152 268" fill="none" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".18"/>
 
-      <!-- ═══ MAIN BODY — tapered capsule shape ═══ -->
-      <!-- Wider mid-section tapering to narrower top shoulder and engine base -->
-      <path d="
-        M100 6
-        C118 6, 128 24, 128 52
-        L128 90
-        C130 100, 132 115, 130 130
-        L125 168
-        C122 185, 120 210, 118 240
-        L118 270
-        C118 278, 112 284, 100 284
-        C88 284, 82 278, 82 270
-        L82 240
-        C80 210, 78 185, 75 168
-        L70 130
-        C68 115, 70 100, 72 90
-        L72 52
-        C72 24, 82 6, 100 6 Z"
-        fill="url(#bodyGrad)" stroke="#0e4878" stroke-width="1"/>
-
-      <!-- Body center spine line -->
+      <path d="M100 6 C118 6, 128 24, 128 52 L128 90 C130 100, 132 115, 130 130 L125 168 C122 185, 120 210, 118 240 L118 270 C118 278, 112 284, 100 284 C88 284, 82 278, 82 270 L82 240 C80 210, 78 185, 75 168 L70 130 C68 115, 70 100, 72 90 L72 52 C72 24, 82 6, 100 6 Z"
+            fill="url(#bodyGrad)" stroke="#0e4878" stroke-width="1"/>
       <line x1="100" y1="10" x2="100" y2="280" stroke="#00F5FF" stroke-width=".35" stroke-opacity=".12"/>
-
-      <!-- Horizontal panel rings -->
       <path d="M74 110 Q100 107 126 110" fill="none" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".18"/>
       <path d="M75 155 Q100 152 125 155" fill="none" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".15"/>
       <path d="M78 205 Q100 202 122 205" fill="none" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".13"/>
       <path d="M80 245 Q100 242 120 245" fill="none" stroke="#00F5FF" stroke-width=".35" stroke-opacity=".12"/>
-
-      <!-- Left cyan accent stripe -->
       <rect x="76" y="90" width="2.5" height="140" rx="1.2" fill="url(#stripeGrad)"/>
-      <!-- Right magenta accent stripe -->
       <rect x="121.5" y="90" width="2.5" height="140" rx="1.2" fill="url(#stripeM)"/>
-
-      <!-- Shoulder ring (transition from nose to body) -->
       <path d="M72 88 Q100 82 128 88" fill="none" stroke="#00F5FF" stroke-width="1.2" stroke-opacity=".4"/>
       <path d="M72 92 Q100 86 128 92" fill="none" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".15"/>
 
-      <!-- ═══ ELONGATED NOSE CONE ═══ -->
-      <!-- Slender ogive nose, taller and thinner -->
       <path d="M72 88 C72 60, 84 28, 100 6 C116 28, 128 60, 128 88 Z"
             fill="url(#noseGrad)" stroke="#00b8d4" stroke-width=".8"/>
-      <!-- Nose highlight (left side specular) -->
-      <path d="M84 86 C82 58, 90 28, 100 10 C96 26, 92 56, 90 86 Z"
-            fill="rgba(255,255,255,.1)"/>
-      <!-- Nose tip glow -->
+      <path d="M84 86 C82 58, 90 28, 100 10 C96 26, 92 56, 90 86 Z" fill="rgba(255,255,255,.1)"/>
       <circle cx="100" cy="7" r="5" fill="#00F5FF" opacity=".85" filter="url(#softGlow)"/>
       <circle cx="100" cy="7" r="2.5" fill="white"/>
 
-      <!-- ═══ HEXAGONAL COCKPIT WINDOW ═══ -->
-      <!-- Hex outline -->
       <polygon points="100,95 114,103 114,119 100,127 86,119 86,103"
                fill="url(#windowGrad)" stroke="#00F5FF" stroke-width="1.6" filter="url(#glow)"/>
-      <!-- Inner hex ring -->
       <polygon points="100,98 111,105 111,117 100,124 89,117 89,105"
                fill="none" stroke="rgba(0,245,255,.25)" stroke-width=".6"/>
-      <!-- Window glint -->
       <ellipse cx="93" cy="104" rx="5" ry="3.5" fill="rgba(255,255,255,.18)" transform="rotate(-20 93 104)"/>
-      <!-- Window inner core glow -->
       <circle cx="100" cy="111" r="7" fill="rgba(0,245,255,.07)"/>
 
-      <!-- ═══ SIDE INTAKE SCOOPS ═══ -->
-      <!-- Left scoop -->
       <path d="M76 142 L70 152 L70 168 L76 164 Z" fill="#061828" stroke="#00F5FF" stroke-width=".6" stroke-opacity=".4"/>
       <line x1="70" y1="155" x2="75" y2="155" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".5"/>
-      <!-- Right scoop -->
       <path d="M124 142 L130 152 L130 168 L124 164 Z" fill="#061828" stroke="#00F5FF" stroke-width=".6" stroke-opacity=".4"/>
       <line x1="125" y1="155" x2="130" y2="155" stroke="#00F5FF" stroke-width=".4" stroke-opacity=".5"/>
 
-      <!-- ═══ NEBULA-8 LABEL ═══ -->
       <text x="100" y="188" text-anchor="middle" font-family="Orbitron,monospace" font-size="6.5" font-weight="700" letter-spacing="2.5" fill="rgba(0,245,255,.45)">NEBULA</text>
       <text x="100" y="200" text-anchor="middle" font-family="Orbitron,monospace" font-size="10" font-weight="900" letter-spacing="4" fill="rgba(0,245,255,.65)">8</text>
 
-      <!-- ═══ DUAL ENGINE BELLS ═══ -->
-      <!-- Left bell -->
       <path d="M82 272 C78 272, 74 275, 72 282 L76 290 C80 294, 88 296, 90 290 L90 272 Z"
             fill="url(#bellGrad)" stroke="#0d4878" stroke-width=".8"/>
       <ellipse cx="81" cy="272" rx="9" ry="3.5" fill="url(#thrusterGrad)" stroke="#00F5FF" stroke-width=".7" stroke-opacity=".5"/>
-      <!-- Left bell inner dark -->
       <ellipse cx="81" cy="272" rx="6" ry="2" fill="#020810"/>
-
-      <!-- Right bell -->
       <path d="M118 272 C122 272, 126 275, 128 282 L124 290 C120 294, 112 296, 110 290 L110 272 Z"
             fill="url(#bellGrad)" stroke="#0d4878" stroke-width=".8"/>
       <ellipse cx="119" cy="272" rx="9" ry="3.5" fill="url(#thrusterGrad)" stroke="#00F5FF" stroke-width=".7" stroke-opacity=".5"/>
       <ellipse cx="119" cy="272" rx="6" ry="2" fill="#020810"/>
-
-      <!-- Bell glow rings -->
       <ellipse cx="81"  cy="272" rx="9"  ry="3.5" fill="none" stroke="#00F5FF" stroke-width=".5" stroke-opacity=".3" filter="url(#glow)"/>
       <ellipse cx="119" cy="272" rx="9"  ry="3.5" fill="none" stroke="#00F5FF" stroke-width=".5" stroke-opacity=".3" filter="url(#glow)"/>
 
-      <!-- ═══ STATUS LIGHTS ═══ -->
       <circle cx="85" cy="218" r="2.8" fill="#AAFF00" filter="url(#glow)">
         <animate attributeName="opacity" values="1;.15;1" dur="1.4s" repeatCount="indefinite"/>
       </circle>
@@ -560,12 +595,10 @@
 
     <!-- Fire exhaust — dual bell layout -->
     <div class="exhaust" style="bottom:-14px; gap:0; flex-direction:row; width:80px; justify-content:space-around; align-items:flex-start;">
-      <!-- Left engine flame cluster -->
       <div style="display:flex;flex-direction:column;align-items:center;">
         <div class="flame" style="width:22px;height:48px;background:linear-gradient(to bottom,#fff 0%,#FFEF00 25%,#FF9100 65%,transparent 100%);--fd:.09s;opacity:.95;border-radius:50% 50% 40% 40%;animation:flicker .09s ease-in-out infinite alternate;"></div>
         <div class="flame" style="width:14px;height:38px;background:linear-gradient(to bottom,#fff 0%,#00F5FF 35%,#0060FF 65%,transparent 100%);--fd:.07s;opacity:.65;margin-top:-28px;border-radius:50% 50% 40% 40%;animation:flicker .07s ease-in-out infinite alternate;"></div>
       </div>
-      <!-- Right engine flame cluster -->
       <div style="display:flex;flex-direction:column;align-items:center;">
         <div class="flame" style="width:22px;height:48px;background:linear-gradient(to bottom,#fff 0%,#FFEF00 25%,#FF9100 65%,transparent 100%);--fd:.11s;opacity:.95;border-radius:50% 50% 40% 40%;animation:flicker .11s ease-in-out infinite alternate;"></div>
         <div class="flame" style="width:14px;height:38px;background:linear-gradient(to bottom,#fff 0%,#00F5FF 35%,#0060FF 65%,transparent 100%);--fd:.08s;opacity:.65;margin-top:-28px;border-radius:50% 50% 40% 40%;animation:flicker .08s ease-in-out infinite alternate;"></div>
@@ -596,6 +629,28 @@
   <div class="status-dot"><div class="dot-pip" style="background:#FF2EF5;box-shadow:0 0 6px #FF2EF5;animation-delay:1.2s;"></div>READY</div>
 </div>
 
+<!-- Audio mute/unmute button (right side, vertically centred) -->
+<button id="audioBtn" data-tip="AUDIO" aria-label="Toggle background music">
+  <!-- Animated waveform bars (playing state) -->
+  <div class="wave-bars">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <!-- Muted speaker icon -->
+  <div class="mute-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#00F5FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="rgba(0,245,255,.15)"/>
+      <line x1="23" y1="9" x2="17" y2="15"/>
+      <line x1="17" y1="9" x2="23" y2="15"/>
+    </svg>
+  </div>
+</button>
+
+<!-- Background audio — replace src with your actual audio file URL -->
+<audio id="bgAudio" loop preload="auto">
+  <source src="YOUR_AUDIO_FILE.mp3" type="audio/mpeg">
+  <!-- Fallback: <source src="YOUR_AUDIO_FILE.ogg" type="audio/ogg"> -->
+</audio>
+
 <!-- Zoom transition overlay -->
 <div id="zoomOverlay">
   <div class="zoom-text">LAUNCHING...</div>
@@ -621,7 +676,6 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-// Static stars
 for (let i = 0; i < 280; i++) {
   stars.push({
     x: Math.random(), y: Math.random(),
@@ -635,14 +689,12 @@ for (let i = 0; i < 280; i++) {
   });
 }
 
-// Shooting star factory
 function spawnShooter() {
   const angle = -(20 + Math.random() * 30) * Math.PI / 180;
   const speed = 6 + Math.random() * 8;
-  const startX = Math.random() * W * .7;
-  const startY = Math.random() * H * .3;
   shooters.push({
-    x: startX, y: startY,
+    x: Math.random() * W * .7,
+    y: Math.random() * H * .3,
     vx: Math.cos(angle) * speed,
     vy: Math.sin(angle) * speed,
     len: 80 + Math.random() * 120,
@@ -650,17 +702,14 @@ function spawnShooter() {
     width: .5 + Math.random() * 1.2
   });
 }
-
 setInterval(() => { if (Math.random() < .6) spawnShooter(); }, 1200);
 
-let t = 0;
-let parallaxX = 0, parallaxY = 0;
+let t = 0, parallaxX = 0, parallaxY = 0;
 
 function drawFrame() {
   ctx.clearRect(0, 0, W, H);
   t += .016;
 
-  // Stars
   stars.forEach(s => {
     const twinkle = s.baseOpacity * (.6 + .4 * Math.sin(t * s.twinkleSpeed + s.twinkleOffset));
     const px = s.x * W + parallaxX * s.parallaxStrength;
@@ -672,7 +721,6 @@ function drawFrame() {
     ctx.fill();
   });
 
-  // Shooting stars (diagonal)
   shooters = shooters.filter(s => s.opacity > 0);
   shooters.forEach(s => {
     const grad = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * (s.len / 8), s.y - s.vy * (s.len / 8));
@@ -686,14 +734,11 @@ function drawFrame() {
     ctx.lineWidth = s.width;
     ctx.globalAlpha = 1;
     ctx.stroke();
-
-    // Head glow
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.width * 1.5, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(255,255,255,${s.opacity * .9})`;
     ctx.globalAlpha = 1;
     ctx.fill();
-
     s.x += s.vx; s.y += s.vy;
     s.opacity -= .018;
   });
@@ -716,30 +761,23 @@ function makeSmoke() {
 }
 setInterval(makeSmoke, 120);
 
-/* ── DEVICE ORIENTATION PARALLAX ─────────────────────────── */
-const scene  = document.getElementById('scene');
+/* ── PARALLAX ────────────────────────────────────────────── */
+const scene      = document.getElementById('scene');
 const rocketWrap = document.getElementById('rocket-wrap');
+let tiltX = 0, tiltY = 0, curX = 0, curY = 0, mouseX = 0, mouseY = 0;
 
-// Smooth parallax target & current
-let tiltX = 0, tiltY = 0;
-let curX  = 0, curY  = 0;
-let mouseX = 0, mouseY = 0;
-
-// Mouse fallback (desktop)
 document.addEventListener('mousemove', e => {
   mouseX = (e.clientX / window.innerWidth  - .5) * 2;
   mouseY = (e.clientY / window.innerHeight - .5) * 2;
 });
 
-// Device orientation (tablet/phone)
 function handleOrientation(e) {
   if (e.gamma === null) return;
   tiltX = Math.max(-1, Math.min(1, e.gamma / 25));
-  tiltY = Math.max(-1, Math.min(1, (e.beta  - 30) / 25));
+  tiltY = Math.max(-1, Math.min(1, (e.beta - 30) / 25));
 }
 window.addEventListener('deviceorientation', handleOrientation);
 
-// iOS 13+ permission
 if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
   document.getElementById('startBtn').addEventListener('click', () => {
     DeviceOrientationEvent.requestPermission().then(p => {
@@ -751,25 +789,62 @@ if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEve
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 function updateParallax() {
-  // Blend device orientation and mouse
   const ax = tiltX !== 0 ? tiltX : mouseX;
   const ay = tiltY !== 0 ? tiltY : mouseY;
   curX = lerp(curX, ax, .06);
   curY = lerp(curY, ay, .06);
-
-  // Scene shifts slightly (UI layer)
-  scene.style.transform = `translate(${curX * 14}px, ${curY * 10}px)`;
-
-  // Rocket shifts more (mid layer)
+  scene.style.transform      = `translate(${curX * 14}px, ${curY * 10}px)`;
   rocketWrap.style.transform = `translate(${curX * 22}px, ${curY * 16}px)`;
-
-  // Star canvas parallax driven by same values
   parallaxX = curX * 60;
   parallaxY = curY * 40;
-
   requestAnimationFrame(updateParallax);
 }
 updateParallax();
+
+/* ── BACKGROUND AUDIO ────────────────────────────────────── */
+const bgAudio  = document.getElementById('bgAudio');
+const audioBtn = document.getElementById('audioBtn');
+let audioStarted = false;
+let isMuted = false;
+
+bgAudio.volume = 0.35; // comfortable background level
+
+// Attempt autoplay; browsers may block it until a user gesture
+function tryAutoplay() {
+  bgAudio.play().then(() => {
+    audioStarted = true;
+  }).catch(() => {
+    // Autoplay blocked — will start on first user interaction
+    audioStarted = false;
+  });
+}
+tryAutoplay();
+
+// Start audio on first interaction anywhere (fallback for autoplay block)
+function startOnInteraction() {
+  if (!audioStarted && !isMuted) {
+    bgAudio.play().then(() => { audioStarted = true; }).catch(() => {});
+  }
+  document.removeEventListener('pointerdown', startOnInteraction);
+  document.removeEventListener('keydown', startOnInteraction);
+}
+document.addEventListener('pointerdown', startOnInteraction);
+document.addEventListener('keydown',     startOnInteraction);
+
+// Mute / unmute toggle
+audioBtn.addEventListener('click', () => {
+  isMuted = !isMuted;
+
+  if (isMuted) {
+    bgAudio.pause();
+    audioBtn.classList.add('muted');
+    audioBtn.setAttribute('data-tip', 'MUTED');
+  } else {
+    bgAudio.play().then(() => { audioStarted = true; }).catch(() => {});
+    audioBtn.classList.remove('muted');
+    audioBtn.setAttribute('data-tip', 'AUDIO');
+  }
+});
 
 /* ── START BUTTON → ZOOM TRANSITION → DASHBOARD ─────────── */
 const overlay = document.getElementById('zoomOverlay');
