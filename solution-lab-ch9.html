@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Solution Lab · CH-9 · NEBULA-8</title>
+<style>
+/* ═══════════════════════════════════════════════
+   CSS VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --primary:    #007c89;
+  --primary-dk: #005f6b;
+  --secondary:  #00bcd4;
+  --accent:     #ffb703;
+  --success:    #2a9d8f;
+  --warning:    #f77f00;
+  --danger:     #e63946;
+  --bg:         #eefcff;
+  --card:       #ffffff;
+  --text:       #12343b;
+  --text-2:     #4a6670;
+  --border:     #c8eef5;
+  --radius:     18px;
+  --radius-sm:  10px;
+  --shadow:     0 8px 28px rgba(0,124,137,0.12);
+  --shadow-lg:  0 16px 48px rgba(0,124,137,0.18);
+  --font:       "Segoe UI", "Inter", Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#bg-canvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+  opacity: 0.35;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER & NAV
+═══════════════════════════════════════════════ */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  box-shadow: 0 4px 20px rgba(0,124,137,0.3);
+}
+
+.header-inner {
+  display: flex; align-items: center; gap: 1rem;
+  max-width: 1200px; margin: 0 auto;
+  padding: 0.6rem 1.25rem;
+}
+.header-sub {
+  font-size: 0.78rem; color: rgba(255,255,255,0.65);
+  font-weight: 600; margin-left: auto;
+  letter-spacing: 0.3px;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 0.5rem;
+  color: #fff; font-size: 1.2rem; font-weight: 700;
+  text-decoration: none; white-space: nowrap;
+}
+.logo-icon { font-size: 1.5rem; }
+.logo-text { color: rgba(255,255,255,0.85); }
+.logo-text strong { color: #fff; }
+
+#main-nav {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.15);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#main-nav::-webkit-scrollbar { display: none; }
+
+.nav-btn {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.75);
+  padding: 0.62rem 0.5rem;
+  font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+  white-space: nowrap;
+  text-align: center;
+}
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.nav-btn.active {
+  background: #fff;
+  color: #007c89;
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 #ffb703;
+}
+
+#menu-toggle { display: none !important; }
+
+/* Progress strip */
+.progress-strip {
+  background: rgba(0,0,0,0.15);
+  height: 6px; position: relative;
+}
+#progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #ffb703, #f77f00);
+  transition: width 0.5s ease;
+}
+#progress-label {
+  position: absolute; right: 1rem; top: -22px;
+  font-size: 0.72rem; color: rgba(255,255,255,0.75); font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN LAYOUT & TABS
+═══════════════════════════════════════════════ */
+#main-content {
+  max-width: 1100px; margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  position: relative; z-index: 1;
+}
+
+.tab { display: none; animation: fadeIn 0.35s ease; }
+.tab.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-header { margin-bottom: 1.5rem; }
+.section-header h2 { font-size: 1.6rem; color: var(--primary); margin-bottom: 0.4rem; }
+.section-header p  { color: var(--text-2); font-size: 0.95rem; }
+
+.section-title {
+  font-size: 1.25rem; font-weight: 700;
+  color: var(--primary); margin: 2rem 0 1rem;
+}
+
+/* ═══════════════════════════════════════════════
+   HOME — HERO
+═══════════════════════════════════════════════ */
+.hero {
+  display: grid; grid-template-columns: 1fr 340px; gap: 2rem;
+  align-items: center;
+  background: linear-gradient(135deg, #007c89 0%, #00bcd4 60%, #2a9d8f 100%);
+  border-radius: var(--radius); padding: 3rem 2.5rem;
+  margin-bottom: 2rem; position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.hero-badge {
+  display: inline-block; background: rgba(255,255,255,0.2);
+  color: #fff; border-radius: 20px; padding: 0.3rem 1rem;
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+.hero h1 { font-size: 2.1rem; color: #fff; line-height: 1.25; margin-bottom: 0.8rem; }
+.gradient-text {
+  background: linear-gradient(135deg, #ffd166, #ffb703);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-sub { color: rgba(255,255,255,0.85); font-size: 1rem; line-height: 1.6; margin-bottom: 1.5rem; }
+.hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* Beaker animation */
+.hero-visual { display: flex; justify-content: center; align-items: center; }
+.beaker-wrap { position: relative; }
+.beaker {
+  width: 140px; height: 180px;
+  background: rgba(255,255,255,0.12);
+  border: 3px solid rgba(255,255,255,0.4);
+  border-radius: 0 0 24px 24px;
+  position: relative; overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+.beaker-water {
+  position: absolute; bottom: 0; width: 100%; height: 72%;
+  background: linear-gradient(180deg, rgba(0,188,212,0.6), rgba(0,124,137,0.8));
+  border-radius: 0 0 22px 22px;
+  overflow: hidden;
+}
+.wave {
+  position: absolute; top: -8px; left: -20px; right: -20px; height: 20px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  animation: wave-anim 2.5s ease-in-out infinite;
+}
+@keyframes wave-anim {
+  0%,100% { transform: translateX(0) scaleY(1); }
+  50%      { transform: translateX(10px) scaleY(1.3); }
+}
+.bubble {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+  animation: bubble-rise linear infinite;
+}
+.b1 { width:8px;height:8px; left:20%; animation-duration:2.2s; animation-delay:0.2s; }
+.b2 { width:6px;height:6px; left:55%; animation-duration:2.8s; animation-delay:0.8s; }
+.b3 { width:10px;height:10px; left:75%; animation-duration:1.9s; animation-delay:1.4s; }
+@keyframes bubble-rise {
+  0%   { bottom: 0;   opacity: 0.8; }
+  100% { bottom: 105%; opacity: 0; }
+}
+.crystal { position: absolute; font-size: 1rem; animation: dissolve-anim 3s ease-in-out infinite; }
+.c1 { top: 30%; left: 25%; animation-delay: 0s; }
+.c2 { top: 50%; left: 60%; animation-delay: 1.5s; }
+@keyframes dissolve-anim { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.2;transform:scale(0.5);} }
+.fish { position: absolute; bottom: 20%; left: 10%; font-size: 1.3rem; animation: swim 4s ease-in-out infinite; }
+@keyframes swim { 0%,100%{transform:translateX(0);} 50%{transform:translateX(60px) scaleX(-1);} }
+.ice { position: absolute; top: 10%; left: 35%; font-size: 1.2rem; animation: float-ice 3s ease-in-out infinite; }
+@keyframes float-ice { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+
+/* ═══════════════════════════════════════════════
+   HOME — CONCEPT TILES
+═══════════════════════════════════════════════ */
+.concept-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 1rem;
+  margin-bottom: 2rem;
+}
+.concept-tile {
+  background: var(--card); border-radius: var(--radius);
+  border: 2px solid color-mix(in srgb, var(--c) 20%, transparent);
+  padding: 1.4rem 1.2rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative; overflow: hidden;
+}
+.concept-tile::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 8%, transparent), transparent);
+}
+.concept-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.ct-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.ct-title { font-size: 1rem; font-weight: 700; color: var(--c); margin-bottom: 0.4rem; }
+.ct-desc { font-size: 0.88rem; color: var(--text-2); line-height: 1.55; }
+
+.stats-row {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.stat-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 1.2rem 2rem; text-align: center;
+  box-shadow: var(--shadow); border: 2px solid var(--border);
+  flex: 1; min-width: 100px;
+}
+.stat-num { display: block; font-size: 2rem; font-weight: 900; color: var(--primary); }
+.stat-lbl { font-size: 0.82rem; color: var(--text-2); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; border: none; border-radius: 30px;
+  padding: 0.7rem 1.8rem; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(0,124,137,0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,124,137,0.4); }
+.btn-primary:active { transform: translateY(1px); }
+
+.btn-outline {
+  background: rgba(255,255,255,0.15); color: #fff;
+  border: 2px solid rgba(255,255,255,0.5); border-radius: 30px;
+  padding: 0.68rem 1.8rem; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-outline:hover { background: rgba(255,255,255,0.25); }
+
+.btn-sm {
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 20px; padding: 0.45rem 1.1rem;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-sm:hover { background: var(--primary-dk); transform: translateY(-1px); }
+
+.btn-outline-sm {
+  background: transparent; color: var(--primary);
+  border: 2px solid var(--primary); border-radius: 20px;
+  padding: 0.42rem 1.1rem; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-outline-sm:hover { background: var(--primary); color: #fff; }
+
+.hidden { display: none !important; }
+
+/* ═══════════════════════════════════════════════
+   NOTES — ACCORDION CARDS
+═══════════════════════════════════════════════ */
+.note-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1.5px solid var(--border); margin-bottom: 1rem;
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.note-header {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 1.1rem 1.4rem; cursor: pointer;
+  background: linear-gradient(135deg, rgba(0,124,137,0.04), rgba(0,188,212,0.04));
+  border: none; width: 100%; text-align: left;
+  transition: background 0.2s;
+}
+.note-header:hover { background: linear-gradient(135deg, rgba(0,124,137,0.1), rgba(0,188,212,0.1)); }
+.note-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.82rem; font-weight: 700; flex-shrink: 0;
+}
+.note-title { font-size: 1rem; font-weight: 700; color: var(--primary); flex: 1; }
+.note-icon { font-size: 1.3rem; }
+.note-chevron { font-size: 1rem; color: var(--text-2); transition: transform 0.3s; margin-left: auto; }
+.note-header.open .note-chevron { transform: rotate(180deg); }
+
+.note-body {
+  display: none; padding: 0 1.4rem 1.4rem;
+  animation: fadeIn 0.25s ease;
+}
+.note-body.open { display: block; }
+.note-desc { color: var(--text-2); font-size: 0.92rem; line-height: 1.7; margin-bottom: 1rem; }
+
+/* Special boxes */
+.formula-box {
+  background: linear-gradient(135deg, #fff8e1, #fff3c4);
+  border: 2px solid var(--accent); border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem; margin: 0.8rem 0;
+  font-family: monospace; font-size: 0.95rem; color: #4a3000;
+}
+.formula-box strong { display: block; font-size: 0.78rem; color: var(--warning); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.quick-check {
+  background: linear-gradient(135deg, #e8f8f5, #d5f5f6);
+  border: 2px solid var(--success); border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem; margin: 0.8rem 0;
+}
+.quick-check strong { display: block; color: var(--success); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+
+.real-life {
+  background: linear-gradient(135deg, #fce4ec, #ffd6e7);
+  border-left: 4px solid var(--danger); border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem; margin: 0.8rem 0;
+}
+.real-life strong { display: block; color: var(--danger); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+
+.think-box {
+  background: linear-gradient(135deg, #e8eaf6, #ede7f6);
+  border-left: 4px solid #7c4dff; border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem; margin: 0.8rem 0;
+}
+.think-box strong { display: block; color: #7c4dff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+
+.mistake-box {
+  background: linear-gradient(135deg, #fff3e0, #ffe8cc);
+  border-left: 4px solid var(--warning); border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem; margin: 0.8rem 0;
+}
+.mistake-box strong { display: block; color: var(--warning); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.4rem; }
+
+.show-answer-btn {
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 20px; padding: 0.4rem 1rem;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer;
+  margin-top: 0.5rem; transition: all 0.2s;
+}
+.show-answer-btn:hover { background: var(--primary-dk); }
+.answer-reveal {
+  display: none; margin-top: 0.6rem;
+  background: rgba(42,157,143,0.1); border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem; color: var(--success); font-size: 0.88rem;
+  border: 1.5px solid rgba(42,157,143,0.3);
+}
+
+.key-terms { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.7rem 0; }
+.key-term {
+  background: var(--primary); color: #fff;
+  border-radius: 15px; padding: 0.22rem 0.7rem;
+  font-size: 0.78rem; font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════
+   MIND MAP
+═══════════════════════════════════════════════ */
+.mindmap-controls { display: flex; gap: 0.6rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+
+#mindmap-wrapper {
+  position: relative; min-height: 600px;
+  background: var(--card); border-radius: var(--radius);
+  border: 2px solid var(--border); box-shadow: var(--shadow);
+  padding: 2rem; overflow: auto;
+}
+
+.mm-center {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; font-size: 0.88rem; font-weight: 700; text-align: center;
+  margin: 0 auto 1.5rem; cursor: pointer; padding: 1rem;
+  box-shadow: 0 0 0 8px rgba(0,188,212,0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+  line-height: 1.4;
+}
+.mm-center:hover { transform: scale(1.05); box-shadow: 0 0 0 14px rgba(0,188,212,0.2); }
+.mm-center span { font-size: 2rem; margin-bottom: 0.3rem; }
+
+#mm-nodes-container {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem;
+}
+
+.mm-node {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.9rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.mm-node:hover { border-color: var(--secondary); transform: translateY(-2px); box-shadow: var(--shadow); }
+.mm-node.expanded { border-color: var(--primary); background: rgba(0,124,137,0.04); }
+.mm-node-header { display: flex; align-items: center; gap: 0.5rem; }
+.mm-node-icon { font-size: 1.3rem; }
+.mm-node-title { font-size: 0.88rem; font-weight: 700; color: var(--primary); flex: 1; }
+.mm-node-arrow { font-size: 0.8rem; color: var(--text-2); transition: transform 0.25s; }
+.mm-node.expanded .mm-node-arrow { transform: rotate(180deg); }
+.mm-node-body { display: none; margin-top: 0.7rem; font-size: 0.83rem; color: var(--text-2); line-height: 1.6; }
+.mm-node.expanded .mm-node-body { display: block; }
+
+/* ═══════════════════════════════════════════════
+   FLASHCARDS
+═══════════════════════════════════════════════ */
+.fc-controls { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.fc-counter { font-size: 0.88rem; font-weight: 700; color: var(--primary); padding: 0 0.5rem; }
+
+.fc-mastered-bar {
+  font-size: 0.85rem; font-weight: 600; color: var(--text-2);
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap;
+}
+.fc-mastered-track {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: var(--border); overflow: hidden; min-width: 80px;
+}
+#fc-mastered-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+
+#flashcard-area { perspective: 1200px; margin-bottom: 1rem; }
+
+.flashcard {
+  width: 100%; max-width: 520px; min-height: 260px; margin: 0 auto;
+  position: relative; transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+  cursor: pointer; border-radius: var(--radius);
+}
+.flashcard.flipped { transform: rotateY(180deg); }
+
+.fc-front, .fc-back {
+  position: absolute; inset: 0;
+  border-radius: var(--radius);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 2rem; text-align: center;
+}
+.fc-front {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff; box-shadow: var(--shadow-lg);
+}
+.fc-back {
+  background: linear-gradient(135deg, #fff8e1, #fff3c4);
+  transform: rotateY(180deg);
+  box-shadow: var(--shadow-lg); border: 2px solid var(--accent);
+}
+
+.fc-icon { font-size: 2.5rem; margin-bottom: 0.7rem; }
+.fc-question { font-size: 1.15rem; font-weight: 700; line-height: 1.5; }
+.fc-answer { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.8rem; line-height: 1.5; }
+.fc-trick { font-size: 0.85rem; color: var(--warning); font-style: italic; line-height: 1.5; }
+
+.fc-actions { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
+.btn-know {
+  background: var(--success); color: #fff; border: none;
+  border-radius: 20px; padding: 0.5rem 1.4rem;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-know:hover { background: #1f7d70; transform: translateY(-2px); }
+.btn-know.known { background: var(--accent); color: #333; }
+
+/* ═══════════════════════════════════════════════
+   QUIZ
+═══════════════════════════════════════════════ */
+.quiz-start-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 2px solid var(--border); box-shadow: var(--shadow);
+  padding: 3rem 2rem; text-align: center; max-width: 420px; margin: 2rem auto;
+}
+.qs-icon { font-size: 4rem; margin-bottom: 1rem; }
+.quiz-start-card h3 { font-size: 1.5rem; color: var(--primary); margin-bottom: 0.5rem; }
+.quiz-start-card p  { color: var(--text-2); margin-bottom: 1.5rem; }
+
+.quiz-hud {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--card); border-radius: var(--radius-sm);
+  padding: 0.8rem 1.2rem; margin-bottom: 1rem;
+  border: 1.5px solid var(--border); flex-wrap: wrap;
+}
+.qhud-item { font-size: 0.88rem; font-weight: 700; color: var(--primary); }
+.q-progress-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; min-width: 80px; }
+#q-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 0.4s; }
+
+.question-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 2px solid var(--border); box-shadow: var(--shadow);
+  padding: 1.8rem 1.6rem;
+}
+.q-type-badge {
+  display: inline-block; background: var(--primary); color: #fff;
+  border-radius: 15px; padding: 0.22rem 0.8rem;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
+  margin-bottom: 0.8rem;
+}
+.q-text { font-size: 1.05rem; font-weight: 600; color: var(--text); line-height: 1.6; margin-bottom: 1.2rem; }
+
+.q-options { display: flex; flex-direction: column; gap: 0.6rem; }
+.q-opt {
+  background: rgba(0,124,137,0.04);
+  border: 2px solid var(--border); border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem; text-align: left;
+  font-size: 0.92rem; font-weight: 600; color: var(--text);
+  cursor: pointer; transition: all 0.18s;
+}
+.q-opt:hover:not(:disabled) { border-color: var(--secondary); background: rgba(0,188,212,0.08); transform: translateX(4px); }
+.q-opt:disabled { cursor: default; }
+.q-opt.correct { background: rgba(42,157,143,0.15); border-color: var(--success); color: var(--success); }
+.q-opt.wrong   { background: rgba(230,57,70,0.12);  border-color: var(--danger);  color: var(--danger); }
+
+.q-feedback {
+  margin-top: 0.8rem; padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-sm); font-size: 0.88rem; line-height: 1.6;
+}
+.q-feedback.correct-fb { background: rgba(42,157,143,0.1);  border: 1.5px solid var(--success); color: #1a5c55; }
+.q-feedback.wrong-fb   { background: rgba(230,57,70,0.08); border: 1.5px solid var(--danger);  color: #8b0010; }
+
+.btn-next {
+  margin-top: 1rem; width: 100%; padding: 0.7rem;
+  font-size: 0.95rem; border-radius: var(--radius-sm);
+}
+
+/* Result screen */
+.result-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 2px solid var(--border); box-shadow: var(--shadow-lg);
+  padding: 2.5rem 2rem; text-align: center; max-width: 480px; margin: 1rem auto;
+}
+.result-trophy { font-size: 4rem; margin-bottom: 0.5rem; }
+.result-card h3 { font-size: 1.6rem; color: var(--primary); margin-bottom: 0.4rem; }
+.result-card > p { color: var(--text-2); margin-bottom: 1rem; }
+.result-badge {
+  font-size: 1.1rem; font-weight: 700;
+  padding: 0.6rem 1.4rem; border-radius: 25px; display: inline-block;
+  margin-bottom: 1.4rem;
+}
+.badge-master   { background: linear-gradient(135deg,#ffd700,#ffb703); color: #4a3000; }
+.badge-explorer { background: linear-gradient(135deg,#2a9d8f,#007c89); color: #fff; }
+.badge-good     { background: linear-gradient(135deg,#00bcd4,#0097a7); color: #fff; }
+.badge-keep     { background: linear-gradient(135deg,#e63946,#c62828); color: #fff; }
+
+.result-stats { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.rs-item { text-align: center; min-width: 80px; }
+.rs-val  { font-size: 2rem; font-weight: 900; color: var(--primary); }
+.rs-lbl  { font-size: 0.78rem; color: var(--text-2); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════
+   SUBJECTIVE Q&A
+═══════════════════════════════════════════════ */
+.subj-section { margin-bottom: 2rem; }
+.subj-section-title {
+  font-size: 1.1rem; font-weight: 700; color: var(--primary);
+  padding: 0.6rem 1rem; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(0,124,137,0.1), rgba(0,188,212,0.1));
+  margin-bottom: 0.8rem; border-left: 4px solid var(--primary);
+}
+.subj-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1.5px solid var(--border); box-shadow: var(--shadow);
+  margin-bottom: 0.8rem; overflow: hidden;
+}
+.subj-q {
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  padding: 1rem 1.3rem; cursor: pointer;
+  background: none; border: none; width: 100%; text-align: left;
+  transition: background 0.2s;
+}
+.subj-q:hover { background: rgba(0,124,137,0.04); }
+.subj-q-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--secondary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+.subj-q-text { font-size: 0.93rem; font-weight: 600; color: var(--text); line-height: 1.5; flex: 1; }
+.subj-chevron { font-size: 0.9rem; color: var(--text-2); transition: transform 0.3s; margin-left: auto; margin-top: 2px; }
+.subj-q.open .subj-chevron { transform: rotate(180deg); }
+
+.subj-answer {
+  display: none; padding: 0 1.3rem 1.3rem 3.3rem;
+  font-size: 0.9rem; color: var(--text-2); line-height: 1.7;
+}
+.subj-answer.open { display: block; animation: fadeIn 0.25s ease; }
+.subj-answer .key-point {
+  background: rgba(42,157,143,0.08); border-left: 3px solid var(--success);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 0.6rem 0.9rem; margin: 0.5rem 0;
+  font-size: 0.85rem;
+}
+.formula-step {
+  background: linear-gradient(135deg,#fff8e1,#fff3c4);
+  border: 1.5px solid var(--accent); border-radius: var(--radius-sm);
+  padding: 0.7rem 1rem; margin: 0.4rem 0;
+  font-family: monospace; font-size: 0.9rem; color: #4a3000;
+}
+
+/* ═══════════════════════════════════════════════
+   GAME ZONE
+═══════════════════════════════════════════════ */
+.game-selector {
+  display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+}
+.game-sel-btn {
+  background: var(--card); color: var(--primary);
+  border: 2px solid var(--border); border-radius: 25px;
+  padding: 0.5rem 1.1rem; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.game-sel-btn:hover  { border-color: var(--primary); }
+.game-sel-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.game-panel {
+  display: none; background: var(--card); border-radius: var(--radius);
+  border: 2px solid var(--border); box-shadow: var(--shadow);
+  padding: 1.8rem; animation: fadeIn 0.3s ease;
+}
+.game-panel.active { display: block; }
+.game-panel h3 { font-size: 1.25rem; color: var(--primary); margin-bottom: 0.4rem; }
+.game-panel > p { color: var(--text-2); font-size: 0.9rem; margin-bottom: 1rem; }
+
+/* Game 1 */
+.g1-score-row { font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; }
+.g1-targets { display: flex; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+.g1-bucket {
+  flex: 1; min-width: 160px; border-radius: var(--radius-sm);
+  border: 2px dashed var(--border); padding: 1rem; min-height: 100px;
+  transition: border-color 0.2s;
+}
+.g1-bucket:first-child { border-color: rgba(0,188,212,0.5); background: rgba(0,188,212,0.04); }
+.g1-bucket:last-child  { border-color: rgba(247,127,0,0.5); background: rgba(247,127,0,0.04); }
+.bucket-label { font-size: 0.78rem; font-weight: 800; letter-spacing: 1px; color: var(--text-2); margin-bottom: 0.5rem; }
+.bucket-items { display: flex; flex-wrap: wrap; gap: 0.4rem; min-height: 32px; }
+.g1-items-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.8rem; }
+.g1-item {
+  background: var(--primary); color: #fff; border: none;
+  border-radius: 20px; padding: 0.45rem 1rem;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.g1-item:hover { transform: scale(1.05); background: var(--primary-dk); }
+.g1-placed {
+  background: rgba(0,124,137,0.15); color: var(--primary);
+  border: 1.5px solid var(--primary); border-radius: 15px;
+  padding: 0.2rem 0.7rem; font-size: 0.8rem; font-weight: 700;
+}
+.g1-feedback { font-size: 0.9rem; font-weight: 700; min-height: 24px; }
+
+/* Game 2 */
+.g2-score-row { display: flex; gap: 1rem; font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 1rem; }
+.g2-card {
+  background: linear-gradient(135deg, rgba(0,188,212,0.08), rgba(0,124,137,0.06));
+  border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 2rem; text-align: center; max-width: 320px; margin: 0 auto 1rem;
+}
+.g2-object { font-size: 4rem; margin-bottom: 0.5rem; }
+.g2-name { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin-bottom: 1.2rem; }
+.g2-btns { display: flex; gap: 0.8rem; justify-content: center; }
+.g2-btn {
+  flex: 1; padding: 0.7rem 0.5rem; border-radius: var(--radius-sm);
+  border: none; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  transition: all 0.18s;
+}
+.float-btn { background: rgba(0,188,212,0.15); color: var(--primary); border: 2px solid var(--secondary); }
+.float-btn:hover { background: var(--secondary); color: #fff; }
+.sink-btn  { background: rgba(230,57,70,0.1); color: var(--danger); border: 2px solid var(--danger); }
+.sink-btn:hover { background: var(--danger); color: #fff; }
+.g2-feedback {
+  margin: 0.5rem auto 0; max-width: 380px;
+  padding: 0.9rem 1.2rem; border-radius: var(--radius-sm);
+  font-size: 0.88rem; line-height: 1.6; font-weight: 600;
+}
+.g2-feedback.correct-fb { background: rgba(42,157,143,0.12); border: 1.5px solid var(--success); color: #1a5c55; }
+.g2-feedback.wrong-fb   { background: rgba(230,57,70,0.1); border: 1.5px solid var(--danger); color: #8b0010; }
+
+/* Game 3 */
+.g3-puzzle {
+  background: linear-gradient(135deg, rgba(0,124,137,0.06), rgba(0,188,212,0.06));
+  border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 1.5rem; margin-bottom: 1rem;
+}
+.g3-objects { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.g3-obj {
+  flex: 1; min-width: 130px;
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1rem; text-align: center;
+}
+.g3-obj-icon { font-size: 2rem; margin-bottom: 0.4rem; }
+.g3-obj-name { font-size: 0.88rem; font-weight: 700; color: var(--primary); margin-bottom: 0.3rem; }
+.g3-obj-data { font-size: 0.82rem; color: var(--text-2); }
+.g3-question { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; }
+.g3-options { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.g3-opt {
+  padding: 0.5rem 1.2rem; border-radius: 20px; border: 2px solid var(--border);
+  background: var(--card); font-size: 0.88rem; font-weight: 700;
+  color: var(--text); cursor: pointer; transition: all 0.18s;
+}
+.g3-opt:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.g3-opt.correct-ans { background: rgba(42,157,143,0.15); border-color: var(--success); color: var(--success); }
+.g3-opt.wrong-ans   { background: rgba(230,57,70,0.1); border-color: var(--danger); color: var(--danger); }
+.g3-solution { margin-top: 1rem; padding: 1rem; background: rgba(255,183,3,0.08); border: 1.5px solid var(--accent); border-radius: var(--radius-sm); font-size: 0.88rem; line-height: 1.8; display: none; }
+
+/* Game 4 */
+.g4-grid { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+.g4-col { flex: 1; min-width: 150px; }
+.g4-label { font-size: 0.85rem; font-weight: 700; color: var(--text-2); margin-bottom: 0.6rem; }
+.g4-options { display: flex; flex-direction: column; gap: 0.4rem; }
+.g4-opt {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.55rem 0.9rem;
+  font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: all 0.18s; text-align: center;
+}
+.g4-opt:hover   { border-color: var(--secondary); background: rgba(0,188,212,0.06); }
+.g4-opt.selected { border-color: var(--primary); background: rgba(0,124,137,0.1); color: var(--primary); }
+.g4-mixer { width: 70px; text-align: center; }
+.g4-plus { font-size: 2.5rem; color: var(--accent); font-weight: 900; }
+.g4-result { border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1rem; }
+.g4-beaker { font-size: 3rem; margin-bottom: 0.5rem; animation: mix-anim 0.5s ease; }
+@keyframes mix-anim { 0%{transform:scale(0.5) rotate(-10deg);} 100%{transform:scale(1) rotate(0);} }
+.g4-success { background: rgba(42,157,143,0.1); border: 2px solid var(--success); }
+.g4-fail    { background: rgba(230,57,70,0.08); border: 2px solid var(--danger); }
+.g4-neutral { background: rgba(255,183,3,0.1); border: 2px solid var(--accent); }
+
+/* ═══════════════════════════════════════════════
+   FOOTER & BACK-TOP
+═══════════════════════════════════════════════ */
+footer {
+  background: var(--primary); color: rgba(255,255,255,0.75);
+  text-align: center; padding: 1.5rem 1rem;
+  font-size: 0.82rem; line-height: 1.8;
+  position: relative; z-index: 1;
+}
+footer p { margin: 0.2rem 0; }
+
+#back-top {
+  position: fixed; bottom: 1.8rem; right: 1.8rem;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 50%; width: 44px; height: 44px;
+  font-size: 1.2rem; font-weight: 700; cursor: pointer;
+  box-shadow: var(--shadow); z-index: 200;
+  transition: all 0.2s; display: none;
+}
+#back-top:hover { transform: translateY(-3px); }
+#back-top.visible { display: flex; align-items: center; justify-content: center; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* nav stays horizontal always - handled by tab-bar CSS */
+  #menu-toggle { display: none !important; }
+  .hero { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.5rem; }
+  .hero-visual { display: none; }
+  .hero h1 { font-size: 1.6rem; }
+  .concept-grid { grid-template-columns: 1fr; }
+  .stats-row { gap: 0.6rem; }
+  #mm-nodes-container { grid-template-columns: 1fr 1fr; }
+  .opts-grid { grid-template-columns: 1fr; }
+  .g1-targets { flex-direction: column; }
+  .g4-grid { flex-direction: column; }
+  .g4-mixer { width: auto; }
+  .g4-plus { font-size: 2rem; }
+}
+
+@media (max-width: 480px) {
+  #mm-nodes-container { grid-template-columns: 1fr; }
+  .result-stats { flex-direction: column; align-items: center; }
+  .fc-controls { justify-content: center; }
+}
+
+</style>
+</head>
+<body>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet" onerror="this.remove()">
+<style>
+
+/* ── NEBULA-8 Back Bar ── */
+#nebula-back-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 18px;
+  background: #04030F;
+  border-bottom: 1px solid rgba(170,255,0,.2);
+  font-family: 'Orbitron', monospace;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
+#nebula-back-bar a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  color: #AAFF00;
+  text-decoration: none;
+  background: rgba(170,255,0,.08);
+  border: 1px solid rgba(170,255,0,.3);
+  border-radius: 6px;
+  padding: 6px 13px;
+  transition: all .2s;
+}
+#nebula-back-bar a:hover { background: rgba(170,255,0,.2); }
+#nebula-back-bar a svg { width: 10px; height: 10px; stroke: #AAFF00; fill: none; stroke-width: 2.5; }
+#nebula-back-bar .nb-breadcrumb {
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: rgba(255,255,255,.3);
+}
+#nebula-back-bar .nb-breadcrumb span { color: #AAFF00; }
+#nebula-back-bar .nb-badge {
+  margin-left: auto;
+  background: rgba(170,255,0,.1);
+  border: 1px solid rgba(170,255,0,.25);
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 8px;
+  font-weight: 700;
+  color: #AAFF00;
+  letter-spacing: .12em;
+}
+
+</style>
+<div id="nebula-back-bar">
+  <a href="nebula8-dashboard.html">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Dashboard
+  </a>
+  <div class="nb-breadcrumb">NEBULA-8 &rsaquo; Science &rsaquo; <span>CUR · CH-9</span></div>
+  <div class="nb-badge">⚗️ Solution Lab</div>
+</div>
+
+
+<!-- ═══════════════ FLOATING BG CANVAS ═══════════════ -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">⚗️</span>
+      <span class="logo-text">Solution<strong>Lab</strong></span>
+    </div>
+    <span class="header-sub">Class 8 · Chapter 9</span>
+  </div>
+  <nav id="main-nav" aria-label="Chapter sections">
+    <button class="nav-btn active" data-tab="home">🏠 Home</button>
+    <button class="nav-btn" data-tab="notes">📖 Notes</button>
+    <button class="nav-btn" data-tab="mindmap">🕸️ Mind Map</button>
+    <button class="nav-btn" data-tab="flashcards">🃏 Flashcards</button>
+    <button class="nav-btn" data-tab="quiz">🧠 Quiz</button>
+    <button class="nav-btn" data-tab="subjective">✍️ Q&amp;A</button>
+    <button class="nav-btn" data-tab="gamezone">🎮 Games</button>
+  </nav>
+  <button id="menu-toggle" aria-label="Toggle navigation" style="display:none">☰</button>
+  <!-- Progress bar -->
+  <div class="progress-strip" role="progressbar" aria-label="Completion progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div id="progress-fill"></div>
+    <span id="progress-label">0% Complete</span>
+  </div>
+</header>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main id="main-content">
+
+<!-- ──────────── HOME TAB ──────────── -->
+<section id="tab-home" class="tab active" aria-label="Home section">
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-badge">Class 8 Science · Chapter 9</div>
+      <h1>The Amazing World of<br/><span class="gradient-text">Solutes, Solvents &amp; Solutions</span></h1>
+      <p class="hero-sub">Enter the Solution Lab and explore how substances dissolve, mix, float, sink, and behave in everyday life.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="switchTab('notes')">🚀 Start Learning</button>
+        <button class="btn-outline" onclick="switchTab('quiz')">🧠 Take Quiz</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="beaker-wrap" aria-hidden="true">
+        <div class="beaker">
+          <div class="beaker-water">
+            <div class="wave"></div>
+            <div class="bubble b1"></div>
+            <div class="bubble b2"></div>
+            <div class="bubble b3"></div>
+            <div class="crystal c1">🧂</div>
+            <div class="crystal c2">🧂</div>
+            <div class="fish">🐟</div>
+            <div class="ice">🧊</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Concept tiles -->
+  <div class="section-title">🔬 Key Concepts at a Glance</div>
+  <div class="concept-grid">
+    <div class="concept-tile" style="--c:#007c89">
+      <div class="ct-icon">⚗️</div>
+      <div class="ct-title">Solute + Solvent = Solution</div>
+      <div class="ct-desc">When a solute dissolves in a solvent, they form a uniform mixture called a solution.</div>
+    </div>
+    <div class="concept-tile" style="--c:#00bcd4">
+      <div class="ct-icon">🪣</div>
+      <div class="ct-title">Saturated vs Unsaturated</div>
+      <div class="ct-desc">A saturated solution can hold no more solute; an unsaturated one can dissolve more.</div>
+    </div>
+    <div class="concept-tile" style="--c:#2a9d8f">
+      <div class="ct-icon">🌡️</div>
+      <div class="ct-title">Solubility &amp; Temperature</div>
+      <div class="ct-desc">Most solids dissolve more at higher temperatures; gases dissolve less when heated.</div>
+    </div>
+    <div class="concept-tile" style="--c:#ffb703">
+      <div class="ct-icon">🐠</div>
+      <div class="ct-title">Dissolved Oxygen</div>
+      <div class="ct-desc">Aquatic life depends on oxygen dissolved in water. Warm water holds less of it.</div>
+    </div>
+    <div class="concept-tile" style="--c:#f77f00">
+      <div class="ct-icon">⚖️</div>
+      <div class="ct-title">Density</div>
+      <div class="ct-desc">Density = Mass ÷ Volume. Denser objects sink; less dense ones float.</div>
+    </div>
+    <div class="concept-tile" style="--c:#e63946">
+      <div class="ct-icon">🧊</div>
+      <div class="ct-title">Floating &amp; Sinking</div>
+      <div class="ct-desc">Ice floats on water because it is less dense than liquid water — a life-saving property!</div>
+    </div>
+  </div>
+
+  <!-- Quick stats -->
+  <div class="stats-row">
+    <div class="stat-card"><span class="stat-num">20</span><span class="stat-lbl">Topics</span></div>
+    <div class="stat-card"><span class="stat-num">45</span><span class="stat-lbl">Flashcards</span></div>
+    <div class="stat-card"><span class="stat-num">25+</span><span class="stat-lbl">Quiz Questions</span></div>
+    <div class="stat-card"><span class="stat-num">4</span><span class="stat-lbl">Mini Games</span></div>
+  </div>
+</section>
+
+<!-- ──────────── NOTES TAB ──────────── -->
+<section id="tab-notes" class="tab" aria-label="Notes section">
+  <div class="section-header">
+    <h2>📖 Interactive Notes</h2>
+    <p>Click each topic to expand. Every card has a concept, example, and Quick Check!</p>
+  </div>
+  <div id="notes-container"></div>
+</section>
+
+<!-- ──────────── MIND MAP TAB ──────────── -->
+<section id="tab-mindmap" class="tab" aria-label="Mind Map section">
+  <div class="section-header">
+    <h2>🕸️ Spider-Web Mind Map</h2>
+    <p>Click any node to expand its details. Use the buttons below to expand or collapse all.</p>
+  </div>
+  <div class="mindmap-controls">
+    <button class="btn-sm" onclick="expandAllNodes()">＋ Expand All</button>
+    <button class="btn-sm btn-outline-sm" onclick="collapseAllNodes()">－ Collapse All</button>
+  </div>
+  <div id="mindmap-wrapper">
+    <div id="mindmap-center" class="mm-center" onclick="toggleNode('center')" tabindex="0" aria-expanded="false">
+      <span>⚗️</span>
+      <strong>Solutes, Solvents &amp; Solutions</strong>
+    </div>
+    <div id="mm-nodes-container"></div>
+  </div>
+</section>
+
+<!-- ──────────── FLASHCARDS TAB ──────────── -->
+<section id="tab-flashcards" class="tab" aria-label="Flashcards section">
+  <div class="section-header">
+    <h2>🃏 Flashcards</h2>
+    <p>Click a card to flip it. Mark cards as known to track your progress!</p>
+  </div>
+  <div class="fc-controls">
+    <button class="btn-sm" onclick="prevCard()">◀ Prev</button>
+    <span id="fc-counter" class="fc-counter">Card 1 of 45</span>
+    <button class="btn-sm" onclick="nextCard()">Next ▶</button>
+    <button class="btn-sm btn-outline-sm" onclick="shuffleCards()">🔀 Shuffle</button>
+  </div>
+  <div class="fc-mastered-bar">
+    ⭐ Mastered: <span id="fc-mastered-count">0</span> / 45
+    <div class="fc-mastered-track"><div id="fc-mastered-fill" style="width:0%"></div></div>
+  </div>
+  <div id="flashcard-area">
+    <div class="flashcard" id="flashcard" onclick="flipCard()" tabindex="0" aria-label="Flashcard, click to flip">
+      <div class="fc-front" id="fc-front">
+        <div class="fc-icon" id="fc-icon">🧪</div>
+        <div class="fc-question" id="fc-question">Loading...</div>
+      </div>
+      <div class="fc-back" id="fc-back">
+        <div class="fc-answer" id="fc-answer">Answer</div>
+        <div class="fc-trick" id="fc-trick"></div>
+      </div>
+    </div>
+  </div>
+  <div class="fc-actions">
+    <button class="btn-know" onclick="markKnown()" id="know-btn">✅ I Know This</button>
+    <button class="btn-outline-sm" onclick="resetMastered()">↺ Reset Progress</button>
+  </div>
+</section>
+
+<!-- ──────────── QUIZ TAB ──────────── -->
+<section id="tab-quiz" class="tab" aria-label="Quiz section">
+  <div class="section-header">
+    <h2>🧠 Interactive Quiz</h2>
+    <p>Test your knowledge! One question at a time — instant feedback after each answer.</p>
+  </div>
+  <div id="quiz-area">
+    <div id="quiz-start-screen">
+      <div class="quiz-start-card">
+        <div class="qs-icon">🧪</div>
+        <h3>Ready for the Challenge?</h3>
+        <p>25 questions · MCQs, Assertion-Reason &amp; Numericals</p>
+        <button class="btn-primary" onclick="startQuiz()">▶ Begin Quiz</button>
+      </div>
+    </div>
+    <div id="quiz-question-screen" class="hidden">
+      <div class="quiz-hud">
+        <div class="qhud-item">Question <span id="q-num">1</span>/25</div>
+        <div class="qhud-item">Score: <span id="q-score">0</span></div>
+        <div class="q-progress-bar"><div id="q-progress-fill"></div></div>
+      </div>
+      <div class="question-card" id="question-card">
+        <div class="q-type-badge" id="q-type-badge">MCQ</div>
+        <div class="q-text" id="q-text">Question text here</div>
+        <div class="q-options" id="q-options"></div>
+        <div class="q-feedback hidden" id="q-feedback"></div>
+        <button class="btn-sm btn-next hidden" id="btn-next" onclick="nextQuestion()">Next Question ▶</button>
+      </div>
+    </div>
+    <div id="quiz-result-screen" class="hidden">
+      <div class="result-card" id="result-card">
+        <div class="result-trophy" id="result-trophy">🏆</div>
+        <h3 id="result-title">Great job!</h3>
+        <p id="result-sub"></p>
+        <div class="result-badge" id="result-badge"></div>
+        <div class="result-stats">
+          <div class="rs-item"><div class="rs-val" id="rs-correct">0</div><div class="rs-lbl">Correct</div></div>
+          <div class="rs-item"><div class="rs-val" id="rs-wrong">0</div><div class="rs-lbl">Wrong</div></div>
+          <div class="rs-item"><div class="rs-val" id="rs-pct">0%</div><div class="rs-lbl">Score</div></div>
+        </div>
+        <button class="btn-primary" onclick="restartQuiz()">🔄 Try Again</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────── SUBJECTIVE TAB ──────────── -->
+<section id="tab-subjective" class="tab" aria-label="Subjective Q&A section">
+  <div class="section-header">
+    <h2>✍️ Subjective Questions &amp; Answers</h2>
+    <p>Click "Show Answer" to reveal the answer. Great for exam practice!</p>
+  </div>
+  <div id="subjective-container"></div>
+</section>
+
+<!-- ──────────── GAME ZONE TAB ──────────── -->
+<section id="tab-gamezone" class="tab" aria-label="Game Zone section">
+  <div class="section-header">
+    <h2>🎮 Game Zone</h2>
+    <p>Learn through play! Four interactive science games below.</p>
+  </div>
+
+  <!-- Game selector -->
+  <div class="game-selector">
+    <button class="game-sel-btn active" data-game="g1" onclick="selectGame(this,'g1')">⚗️ Solute or Solvent?</button>
+    <button class="game-sel-btn" data-game="g2" onclick="selectGame(this,'g2')">🌊 Float or Sink?</button>
+    <button class="game-sel-btn" data-game="g3" onclick="selectGame(this,'g3')">🔬 Density Detective</button>
+    <button class="game-sel-btn" data-game="g4" onclick="selectGame(this,'g4')">🧪 Build a Solution</button>
+  </div>
+
+  <!-- GAME 1 -->
+  <div class="game-panel active" id="g1">
+    <h3>⚗️ Solute or Solvent?</h3>
+    <p>Click each item to classify it. Score a point for each correct classification!</p>
+    <div class="g1-score-row">Score: <span id="g1-score">0</span> | Remaining: <span id="g1-remaining">8</span></div>
+    <div class="g1-targets">
+      <div class="g1-bucket" id="g1-solute" aria-label="Solute bucket">
+        <div class="bucket-label">SOLUTE</div>
+        <div class="bucket-items" id="g1-solute-items"></div>
+      </div>
+      <div class="g1-bucket" id="g1-solvent" aria-label="Solvent bucket">
+        <div class="bucket-label">SOLVENT</div>
+        <div class="bucket-items" id="g1-solvent-items"></div>
+      </div>
+    </div>
+    <div class="g1-items-row" id="g1-items-row"></div>
+    <div class="g1-feedback" id="g1-feedback"></div>
+    <button class="btn-sm" onclick="resetG1()" style="margin-top:1rem">🔄 Restart</button>
+  </div>
+
+  <!-- GAME 2 -->
+  <div class="game-panel" id="g2">
+    <h3>🌊 Float or Sink Challenge</h3>
+    <p>Predict whether each object floats or sinks, then see the explanation!</p>
+    <div class="g2-score-row">Score: <span id="g2-score">0</span> | <span id="g2-streak">Streak: 0 🔥</span></div>
+    <div id="g2-card" class="g2-card">
+      <div class="g2-object" id="g2-object">🪨</div>
+      <div class="g2-name" id="g2-name">Stone</div>
+      <div class="g2-btns">
+        <button class="g2-btn float-btn" onclick="predictG2('float')">🏊 Float</button>
+        <button class="g2-btn sink-btn"  onclick="predictG2('sink')">⬇️ Sink</button>
+      </div>
+    </div>
+    <div class="g2-feedback hidden" id="g2-feedback"></div>
+    <button class="btn-sm" onclick="nextG2Item()" id="g2-next-btn" style="display:none;margin-top:0.8rem">Next ▶</button>
+    <button class="btn-sm" onclick="resetG2()" style="margin-top:1rem">🔄 Restart</button>
+  </div>
+
+  <!-- GAME 3 -->
+  <div class="game-panel" id="g3">
+    <h3>🔬 Density Detective</h3>
+    <p>Calculate the density of each object and decide which is denser!</p>
+    <div id="g3-area"></div>
+    <button class="btn-sm" onclick="loadG3()" style="margin-top:1rem">▶ New Puzzle</button>
+  </div>
+
+  <!-- GAME 4 -->
+  <div class="game-panel" id="g4">
+    <h3>🧪 Build a Solution</h3>
+    <p>Choose a solute and a solvent to see what happens when they mix!</p>
+    <div class="g4-grid">
+      <div class="g4-col">
+        <div class="g4-label">Choose Solute:</div>
+        <div class="g4-options" id="g4-solutes"></div>
+      </div>
+      <div class="g4-mixer" id="g4-mixer">
+        <div class="g4-plus">+</div>
+      </div>
+      <div class="g4-col">
+        <div class="g4-label">Choose Solvent:</div>
+        <div class="g4-options" id="g4-solvents"></div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="buildSolution()" style="margin:1rem auto;display:block">⚗️ Mix!</button>
+    <div class="g4-result hidden" id="g4-result">
+      <div class="g4-beaker" id="g4-beaker">🧪</div>
+      <div id="g4-result-text"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- Back to top -->
+<button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+
+<footer>
+  <p>⚗️ Solution Lab · Class 8 Science Chapter 9 · Built for GitHub Pages</p>
+  <p>Part of NEBULA-8 · Grade 8 Subject Dashboard</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   SOLUTION LAB — script.js
+   Class 8 Science Chapter 9 Interactive Digital Module
+   GitHub Pages compatible — pure vanilla JS
+═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────
+   CANVAS BACKGROUND
+───────────────────────────────────────────── */
+(function initBg() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  const SHAPES = ['💧','🫧','🧂','❄️','🐟','⚗️'];
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  function mkP() {
+    return {
+      x: Math.random() * (W || 800),
+      y: Math.random() * (H || 600),
+      r: 4 + Math.random() * 12,
+      color: ['#007c8933','#00bcd433','#ffb70333','#2a9d8f33','#e6394622'][Math.floor(Math.random()*5)],
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: -(0.15 + Math.random() * 0.35),
+      alpha: 0.3 + Math.random() * 0.5,
+      pulse: Math.random() * Math.PI * 2,
+    };
+  }
+  function init() { resize(); particles = Array.from({length:30}, mkP); }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.pulse += 0.02; p.x += p.vx; p.y += p.vy;
+      if (p.y < -20) { p.y = H + 10; p.x = Math.random() * W; }
+      if (p.x < -20) p.x = W + 10;
+      if (p.x > W + 20) p.x = -10;
+      const scale = 1 + Math.sin(p.pulse) * 0.2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r * scale, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', () => { resize(); });
+  init(); draw();
+})();
+
+/* ─────────────────────────────────────────────
+   TAB SWITCHING + PROGRESS
+───────────────────────────────────────────── */
+const TABS = ['home','notes','mindmap','flashcards','quiz','subjective','gamezone'];
+const visitedTabs = new Set(['home']);
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id)?.classList.add('active');
+  document.querySelector(`.nav-btn[data-tab="${id}"]`)?.classList.add('active');
+  visitedTabs.add(id);
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Close mobile nav
+  document.getElementById('main-nav').classList.remove('open');
+}
+
+function updateProgress() {
+  const pct = Math.round((visitedTabs.size / TABS.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = pct + '% Complete';
+  const strip = document.querySelector('.progress-strip');
+  strip.setAttribute('aria-valuenow', pct);
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+document.getElementById('menu-toggle').addEventListener('click', () => {
+  document.getElementById('main-nav').classList.toggle('open');
+});
+
+/* Back to top */
+window.addEventListener('scroll', () => {
+  document.getElementById('back-top').classList.toggle('visible', window.scrollY > 300);
+});
+
+/* ─────────────────────────────────────────────
+   NOTES DATA
+───────────────────────────────────────────── */
+const NOTES = [
+  {
+    title: "Mixtures: Uniform and Non-uniform", icon: "🥣",
+    desc: "A mixture forms when two or more substances combine without making a new substance. Uniform mixtures look the same throughout; non-uniform ones have visible parts.",
+    terms: ["Uniform mixture","Non-uniform mixture","Suspension"],
+    formula: null,
+    example: "Salt water (uniform) vs muddy water (non-uniform — mud settles).",
+    quickQ: "Is muddy water uniform or non-uniform? Why?",
+    quickA: "Non-uniform — mud particles are not evenly distributed and settle on standing.",
+    realLife: "ORS tastes the same in every sip because it is a uniform mixture.",
+    think: "Why does ORS taste the same in every sip?",
+    thinkA: "Salt and sugar are dissolved evenly, so every part of the solution has the same concentration."
+  },
+  {
+    title: "Solute, Solvent, and Solution", icon: "⚗️",
+    desc: "A solution is a uniform mixture. The substance that dissolves is the solute; the substance that dissolves it is the solvent.",
+    terms: ["Solute","Solvent","Solution"],
+    formula: "Solute + Solvent = Solution\nExample: Salt + Water = Salt Solution",
+    example: "Air is a gaseous solution — oxygen (solute) dissolved in nitrogen (solvent).",
+    quickQ: "In lemon water, identify the solute and the solvent.",
+    quickA: "Lemon juice / sugar = solute; water = solvent (present in larger amount).",
+    realLife: "ORS contains salt and sugar (solutes) dissolved in water (solvent).",
+    think: "Why is nitrogen called the solvent in air?",
+    thinkA: "Because nitrogen is present in the largest proportion (~78%) in air."
+  },
+  {
+    title: "Saturated and Unsaturated Solutions", icon: "🪣",
+    desc: "A fixed amount of solvent can dissolve only a limited amount of solute at a fixed temperature. When no more dissolves, the solution is saturated.",
+    terms: ["Saturated","Unsaturated"],
+    formula: null,
+    example: "Adding salt spoon by spoon: at first it dissolves (unsaturated), then extra salt remains (saturated).",
+    quickQ: "What happens when you keep adding salt to a saturated salt solution?",
+    quickA: "The extra salt remains undissolved at the bottom.",
+    realLife: "Sugar syrup (chashni) becomes saturated when enough sugar is dissolved for sweets.",
+    mistake: "A saturated solution is NOT the same as a concentrated solution — a solution can be saturated but dilute."
+  },
+  {
+    title: "Concentration: Dilute and Concentrated", icon: "📏",
+    desc: "Concentration is the amount of solute in a fixed quantity of solution. Dilute = less solute; concentrated = more solute.",
+    terms: ["Dilute","Concentrated","Concentration"],
+    formula: null,
+    example: "1 spoon sugar in 100 mL water = dilute; 3 spoons sugar in 100 mL water = concentrated.",
+    quickQ: "Which is more concentrated: 2 spoons salt in 100 mL or 4 spoons in 50 mL?",
+    quickA: "4 spoons in 50 mL — more solute in less solvent.",
+    realLife: "Strong tea = concentrated; weak tea = dilute.",
+    think: null
+  },
+  {
+    title: "Solubility", icon: "🧪",
+    desc: "Solubility is the maximum amount of solute that can dissolve in a fixed quantity of solvent at a particular temperature.",
+    terms: ["Solubility","Temperature-dependent"],
+    formula: null,
+    example: "Sugar and salt dissolve in water; sand does not.",
+    quickQ: "Why must temperature be mentioned when stating solubility?",
+    quickA: "Because solubility changes with temperature — a saturated solution at one temp may become unsaturated when heated.",
+    realLife: "More baking soda dissolves in hot water than cold water.",
+    think: null
+  },
+  {
+    title: "Effect of Temperature on Solubility of Solids", icon: "🌡️",
+    desc: "For most solids, solubility increases when temperature increases. A saturated solution on heating may dissolve extra solute.",
+    terms: ["Temperature","Solubility of solids"],
+    formula: null,
+    example: "Baking soda saturated at 20°C dissolves more at 50°C and even more at 70°C.",
+    quickQ: "Why does sugar dissolve faster in hot tea than in cold water?",
+    quickA: "Hot water particles move faster and spread sugar particles more quickly.",
+    realLife: "Candy makers use hot water to dissolve large amounts of sugar.",
+    think: "If a solution is saturated at 25°C and we heat it to 60°C, what happens?"
+  },
+  {
+    title: "Solubility of Gases", icon: "🫧",
+    desc: "Many gases dissolve in water. Gas solubility generally decreases as temperature increases.",
+    terms: ["Dissolved oxygen","Gas solubility","Temperature effect on gases"],
+    formula: null,
+    example: "Cold water contains more dissolved oxygen than warm water.",
+    quickQ: "Why can warmer water be harmful for fish?",
+    quickA: "Warm water holds less dissolved oxygen, so aquatic animals cannot get enough oxygen.",
+    realLife: "Fish die in warm polluted water because dissolved oxygen falls below survival levels.",
+    mistake: "Unlike solids, gas solubility DECREASES with temperature — the opposite direction!"
+  },
+  {
+    title: "Why Objects Float or Sink", icon: "🚢",
+    desc: "Some objects float while others sink. Density is a key factor: objects less dense than the liquid float; denser ones sink.",
+    terms: ["Floating","Sinking","Density comparison"],
+    formula: null,
+    example: "Oil floats on water (oil is less dense). A stone sinks (denser than water).",
+    quickQ: "Will a coin, cork, oil drop, and stone float or sink?",
+    quickA: "Coin and stone: sink. Cork and oil: float. (Based on density vs water.)",
+    realLife: "Bamboo rafts float because bamboo is less dense than water.",
+    think: "An unpeeled orange floats but a peeled orange sinks. Why?"
+  },
+  {
+    title: "Density", icon: "⚖️",
+    desc: "Density tells how much mass is packed in a unit volume. More mass in the same volume = higher density.",
+    terms: ["Density","Mass","Volume"],
+    formula: "Density = Mass ÷ Volume\nExample: Mass = 16.4 g, Volume = 5 cm³ → Density = 3.28 g/cm³",
+    example: "Iron is denser than wood: same sized piece of iron is much heavier.",
+    quickQ: "Why does an iron rod feel heavier than a wooden stick of the same size?",
+    quickA: "Iron has more mass packed in the same volume — it is denser.",
+    realLife: "Dead Sea water has high salt content, making it denser — people float easily!",
+    think: null
+  },
+  {
+    title: "Units and Relative Density", icon: "📐",
+    desc: "SI unit of density is kg/m³. g/cm³ and g/mL are also used. Relative density compares density of a substance with density of water.",
+    terms: ["kg/m³","g/cm³","Relative density"],
+    formula: "Relative Density = Density of Substance ÷ Density of Water\n(Relative density has NO unit)",
+    example: "Aluminium density = 2.7 g/cm³ → Relative density = 2.7 (no unit).",
+    quickQ: "If aluminium has density 2.7 g/cm³, what is its relative density?",
+    quickA: "2.7 (since density of water ≈ 1 g/cm³).",
+    realLife: "Ships are made of steel (dense) but float because of their hollow shape — air lowers overall density.",
+    think: null
+  },
+  {
+    title: "Measuring Mass", icon: "⚖️",
+    desc: "Mass is the quantity of matter in an object. It is measured using a balance. A digital balance must be set to zero (tare) before use.",
+    terms: ["Mass","Weight","Balance","Tare"],
+    formula: null,
+    example: "Units of mass: gram (g) and kilogram (kg). Weight is force; unit is newton (N).",
+    quickQ: "Why do we press 'tare' after placing a watch glass on the balance?",
+    quickA: "To subtract the container mass so only the object's mass is measured.",
+    realLife: "Digital weighing balances at shops work on the same principle.",
+    mistake: "Mass and weight are NOT the same! Mass is constant; weight changes with gravity."
+  },
+  {
+    title: "Measuring Volume", icon: "🧪",
+    desc: "Volume is space occupied by a substance. A measuring cylinder measures liquid volume accurately.",
+    terms: ["Volume","Measuring cylinder","Litre","Millilitre"],
+    formula: "1 L = 1 dm³ | 1 mL = 1 cm³",
+    example: "A narrow, tall cylinder shows small volume changes clearly.",
+    quickQ: "Why is a 100 mL cylinder better than a 500 mL cylinder to measure 70 mL?",
+    quickA: "Smaller divisions in a 100 mL cylinder give more accurate readings.",
+    realLife: "Medicine syringes use the same principle — narrow tubes for accurate dosing.",
+    think: null
+  },
+  {
+    title: "Meniscus", icon: "🌊",
+    desc: "The curved surface of a liquid in a measuring cylinder is called the meniscus. Eye must be level with the meniscus.",
+    terms: ["Meniscus","Parallax error","Eye level"],
+    formula: null,
+    example: "Water: read bottom of meniscus. Coloured liquids (like mercury): read top.",
+    quickQ: "What happens if you read the meniscus from above or below?",
+    quickA: "A parallax error occurs and the volume reading is inaccurate.",
+    realLife: "Lab technicians and nurses read medicine levels in syringes at eye level.",
+    mistake: "Always keep the measuring cylinder on a flat surface. Never hold it in the air while reading."
+  },
+  {
+    title: "Volume of Regular Solids", icon: "📦",
+    desc: "For cuboid-shaped objects, measure length, width, and height, then multiply them.",
+    terms: ["Cuboid","Volume formula"],
+    formula: "Volume of Cuboid = Length × Width × Height\nExample: 25 cm × 18 cm × 2 cm = 900 cm³",
+    example: "Find the volume of your notebook by measuring its length, width, and thickness.",
+    quickQ: "A cuboid is 12 cm × 5 cm × 3 cm. What is its volume?",
+    quickA: "Volume = 12 × 5 × 3 = 180 cm³",
+    realLife: "Architects calculate room volumes using length × width × height.",
+    think: null
+  },
+  {
+    title: "Volume of Irregular Solids", icon: "🪨",
+    desc: "Objects like stones have no formula shape. Their volume is found by the water displacement method.",
+    terms: ["Displacement method","Irregular solid"],
+    formula: "Volume = Final Water Level − Initial Water Level\n1 mL displaced water = 1 cm³ of solid",
+    example: "Initial water = 50 mL, Final water = 55 mL → Stone volume = 5 mL = 5 cm³.",
+    quickQ: "Why does the water level rise when a stone is lowered in?",
+    quickA: "The stone occupies space and displaces water equal to its own volume.",
+    realLife: "Archimedes discovered this principle when he noticed water overflowing his bath!",
+    think: null
+  },
+  {
+    title: "Calculating Density", icon: "🔢",
+    desc: "After measuring mass and volume, density = mass ÷ volume. Compare density to water's density (1 g/cm³) to predict float or sink.",
+    terms: ["Density calculation","Float or sink"],
+    formula: "Density = Mass ÷ Volume\nIf density > 1 g/cm³: sinks in water\nIf density < 1 g/cm³: floats in water",
+    example: "Mass = 400 g, Volume = 40 cm³ → Density = 10 g/cm³ → sinks in water.",
+    quickQ: "A stone has mass 225 g and volume 90 cm³. Does it float or sink?",
+    quickA: "Density = 225/90 = 2.5 g/cm³. Denser than water → it sinks.",
+    realLife: "Geologists identify minerals partly by calculating their density.",
+    mistake: "Shape can make a dense object float — a steel ship floats due to its hollow shape trapping air."
+  },
+  {
+    title: "Effect of Temperature on Density", icon: "🔥",
+    desc: "On heating, particles move apart → volume increases → density decreases. Cooling does the opposite.",
+    terms: ["Temperature","Density","Thermal expansion"],
+    formula: null,
+    example: "Hot air expands → less dense → rises above cooler, denser air.",
+    quickQ: "Why does hot air rise?",
+    quickA: "Hot air is less dense than surrounding cool air, so it is pushed up by buoyancy.",
+    realLife: "Hot-air balloons rise because air inside the balloon is heated, making it less dense than outside air.",
+    think: null
+  },
+  {
+    title: "Effect of Pressure on Density", icon: "💨",
+    desc: "Pressure increases density by pushing particles closer together. Gases are most affected; solids least.",
+    terms: ["Pressure","Compressibility","Gases"],
+    formula: null,
+    example: "Squeezing a gas into a smaller container increases its density significantly.",
+    quickQ: "Which state of matter shows the largest density change under pressure?",
+    quickA: "Gases — their particles have the most space between them.",
+    realLife: "Compressed gas cylinders (LPG, oxygen tanks) use this principle.",
+    think: null
+  },
+  {
+    title: "Why Ice Floats on Water", icon: "🧊",
+    desc: "Water's density is highest at 4°C. When water freezes at 0°C, molecules form an open lattice — more space, less density. So ice floats!",
+    terms: ["Ice","Density of water","4°C anomaly"],
+    formula: "Density of ice ≈ 0.917 g/cm³ < Density of water (1 g/cm³)",
+    example: "Ice floats → insulates the water below → aquatic life survives cold winters.",
+    quickQ: "Why is floating ice important for fish in frozen lakes?",
+    quickA: "The ice layer insulates water below from freezing completely, allowing organisms to survive.",
+    realLife: "If ice sank, lakes would freeze solid in winter and most aquatic life would die.",
+    think: "What would happen to life on Earth if ice were denser than liquid water?"
+  },
+  {
+    title: "Real-Life and Heritage Connections", icon: "🌍",
+    desc: "Science in this chapter appears in daily life and culture: ORS, sugar syrup, medicines, bamboo rafts, Dead Sea, and traditional salt production.",
+    terms: ["ORS","Dead Sea","Ningel salt","Asima Chatterjee"],
+    formula: null,
+    example: "Ningel village (Manipur): salty water is boiled → salt crystals and salt cakes form.",
+    quickQ: "Why does every sip of ORS taste the same?",
+    quickA: "Salt and sugar are evenly dissolved — it's a uniform solution.",
+    realLife: "Asima Chatterjee used solvents and solutions to extract medicinal compounds from plants.",
+    think: "Is water truly the most versatile solvent? Explain with reasoning."
+  }
+];
+
+function buildNotes() {
+  const container = document.getElementById('notes-container');
+  NOTES.forEach((n, i) => {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    card.innerHTML = `
+      <button class="note-header" onclick="toggleNote(this)" aria-expanded="false" aria-controls="nb-${i}">
+        <div class="note-num">${i+1}</div>
+        <span class="note-icon">${n.icon}</span>
+        <span class="note-title">${n.title}</span>
+        <span class="note-chevron">▾</span>
+      </button>
+      <div class="note-body" id="nb-${i}" role="region">
+        <p class="note-desc">${n.desc}</p>
+        <div class="key-terms">${n.terms.map(t=>`<span class="key-term">${t}</span>`).join('')}</div>
+        ${n.formula ? `<div class="formula-box"><strong>📐 Formula</strong>${n.formula.replace(/\n/g,'<br>')}</div>` : ''}
+        <p class="note-desc"><strong>📌 Example:</strong> ${n.example}</p>
+        ${n.realLife ? `<div class="real-life"><strong>🌍 Real-Life Connection</strong>${n.realLife}</div>` : ''}
+        ${n.think ? `<div class="think-box"><strong>🧠 Think Like a Scientist</strong>${n.think}</div>` : ''}
+        ${n.mistake ? `<div class="mistake-box"><strong>⚠️ Common Mistake</strong>${n.mistake}</div>` : ''}
+        <div class="quick-check">
+          <strong>✅ Quick Check</strong>
+          ${n.quickQ}
+          <br/>
+          <button class="show-answer-btn" onclick="revealAnswer(this)">Show Answer</button>
+          <div class="answer-reveal">${n.quickA}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function toggleNote(btn) {
+  const body = document.getElementById(btn.getAttribute('aria-controls') || btn.nextElementSibling.id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  btn.setAttribute('aria-expanded', !isOpen);
+  visitedTabs.add('notes');
+  updateProgress();
+}
+
+function revealAnswer(btn) {
+  const ans = btn.nextElementSibling;
+  ans.style.display = ans.style.display === 'block' ? 'none' : 'block';
+  btn.textContent = ans.style.display === 'block' ? 'Hide Answer' : 'Show Answer';
+}
+
+/* ─────────────────────────────────────────────
+   MIND MAP DATA
+───────────────────────────────────────────── */
+const MM_NODES = [
+  { icon:'🥣', title:'Mixtures', desc:'Uniform mixtures look the same throughout (salt water). Non-uniform have visible parts (muddy water).' },
+  { icon:'⚗️', title:'Solute–Solvent–Solution', desc:'Solute dissolves in solvent to form a solution. Solute + Solvent = Solution.' },
+  { icon:'🪣', title:'Saturated vs Unsaturated', desc:'Saturated: no more solute dissolves at given temp. Unsaturated: can still dissolve more.' },
+  { icon:'📏', title:'Concentration', desc:'Amount of solute in a fixed quantity of solution. Dilute (less) vs Concentrated (more).' },
+  { icon:'🧪', title:'Solubility', desc:'Maximum amount of solute dissolved at a particular temperature. Depends on solute, solvent, and temp.' },
+  { icon:'🌡️', title:'Temperature & Solids', desc:'Most solids dissolve more as temperature rises. Saturated solutions become unsaturated on heating.' },
+  { icon:'🫧', title:'Gases in Water', desc:'Gas solubility decreases with temperature. Dissolved oxygen supports aquatic life.' },
+  { icon:'🚢', title:'Floating & Sinking', desc:'Less dense than liquid → floats. Denser → sinks. Shape and trapped air also matter.' },
+  { icon:'⚖️', title:'Density', desc:'Density = Mass ÷ Volume. SI unit: kg/m³. Higher density = more mass per volume.' },
+  { icon:'🔢', title:'Measuring Mass', desc:'Measured with a balance. Units: g and kg. Press tare to zero the balance.' },
+  { icon:'🧪', title:'Measuring Volume', desc:'Liquid volume via measuring cylinder. Units: mL and cm³. 1 mL = 1 cm³.' },
+  { icon:'🌊', title:'Meniscus', desc:'Curved surface of liquid in cylinder. Read bottom for water; top for coloured liquids. Keep at eye level.' },
+  { icon:'📦', title:'Regular Solid Volume', desc:'Volume = Length × Width × Height. Use same units for all dimensions.' },
+  { icon:'🪨', title:'Irregular Solid Volume', desc:'Displacement method: Volume = Final water level − Initial water level.' },
+  { icon:'📐', title:'Relative Density', desc:'Density of substance ÷ Density of water. Pure number — no unit. Water = 1 g/cm³.' },
+  { icon:'🔥', title:'Temperature & Density', desc:'Heating decreases density (particles spread). Cooling increases density. Hot air rises.' },
+  { icon:'🧊', title:'Ice Floats', desc:'Water is densest at 4°C. Ice at 0°C is less dense (open lattice structure). Protects aquatic life.' },
+  { icon:'🌍', title:'Real-Life Links', desc:'ORS, Dead Sea, bamboo rafts, Ningel salt, hot-air balloons, Asima Chatterjee.' },
+];
+
+function buildMindMap() {
+  const container = document.getElementById('mm-nodes-container');
+  MM_NODES.forEach((n, i) => {
+    const div = document.createElement('div');
+    div.className = 'mm-node';
+    div.setAttribute('tabindex', '0');
+    div.setAttribute('role', 'button');
+    div.setAttribute('aria-expanded', 'false');
+    div.innerHTML = `
+      <div class="mm-node-header">
+        <span class="mm-node-icon">${n.icon}</span>
+        <span class="mm-node-title">${n.title}</span>
+        <span class="mm-node-arrow">▾</span>
+      </div>
+      <div class="mm-node-body">${n.desc}</div>
+    `;
+    div.addEventListener('click', () => toggleNode(div));
+    div.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') toggleNode(div); });
+    container.appendChild(div);
+  });
+}
+
+function toggleNode(el) {
+  if (el === 'center') return;
+  el.classList.toggle('expanded');
+  el.setAttribute('aria-expanded', el.classList.contains('expanded'));
+}
+function expandAllNodes()  { document.querySelectorAll('.mm-node').forEach(n => { n.classList.add('expanded'); n.setAttribute('aria-expanded','true'); }); }
+function collapseAllNodes(){ document.querySelectorAll('.mm-node').forEach(n => { n.classList.remove('expanded'); n.setAttribute('aria-expanded','false'); }); }
+
+/* ─────────────────────────────────────────────
+   FLASHCARDS DATA
+───────────────────────────────────────────── */
+const FLASHCARDS = [
+  { icon:'🥣', q:'What is a uniform mixture?', a:'A mixture where components are evenly distributed. It looks the same throughout.', trick:'Think: same in every spoonful!' },
+  { icon:'🌫️', q:'What is a non-uniform mixture?', a:'A mixture where components are not evenly distributed. Parts may settle, float, or remain visible.', trick:'Think: muddy water — mud settles.' },
+  { icon:'🧂', q:'What is a solute?', a:'The substance that dissolves in a solvent to form a solution.', trick:'SoLUTE = gets diLUTEd/dissolved!' },
+  { icon:'💧', q:'What is a solvent?', a:'The substance in which the solute dissolves. Usually present in larger amount.', trick:'Sol-VENT blows the solute away (dissolves it)!' },
+  { icon:'⚗️', q:'What is a solution?', a:'A uniform mixture formed when one or more solutes dissolve in a solvent.', trick:'SoLUTIon = SoLUTe in solvent!' },
+  { icon:'🌊', q:'What is salt water?', a:'A solution where salt is the solute and water is the solvent. It is a uniform mixture.', trick:'Every sip tastes the same = uniform solution.' },
+  { icon:'🍬', q:'What is sugar water?', a:'A solution where sugar is the solute and water is the solvent.', trick:'Sweet from top to bottom = uniform solution.' },
+  { icon:'💊', q:'What is ORS?', a:'Oral Rehydration Solution — salt and sugar (solutes) dissolved in water (solvent). Uniform mixture.', trick:'One sip = all sips — perfectly uniform.' },
+  { icon:'💨', q:'Is air a solution?', a:'Yes! Air is a gaseous solution where nitrogen is the solvent and oxygen, CO₂, and others are solutes.', trick:'Air = GASeous solution.' },
+  { icon:'🌬️', q:'Why is nitrogen the solvent in air?', a:'Nitrogen is present in the largest amount (~78%) in air.', trick:'Largest amount = solvent.' },
+  { icon:'🫁', q:'What is the solute in air?', a:'Oxygen, carbon dioxide, argon, and other gases are solutes dissolved in nitrogen.', trick:'Smaller amounts = solutes.' },
+  { icon:'🪣', q:'What is a saturated solution?', a:'A solution in which no more solute can dissolve at a given temperature.', trick:'Saturated = full to the brim!' },
+  { icon:'🥤', q:'What is an unsaturated solution?', a:'A solution in which more solute can still dissolve at a given temperature.', trick:'Unsaturated = still has space!' },
+  { icon:'☕', q:'What is a concentrated solution?', a:'A solution with a large amount of solute dissolved in a fixed quantity of solution.', trick:'Concentrated coffee = strong and intense.' },
+  { icon:'🫖', q:'What is a dilute solution?', a:'A solution with a small amount of solute dissolved in a fixed quantity of solution.', trick:'Dilute = watered down.' },
+  { icon:'🧪', q:'What is solubility?', a:'The maximum amount of solute that dissolves in a fixed quantity of solvent at a particular temperature.', trick:'Sol-ubility = the ABILITY to dissolve.' },
+  { icon:'🌡️', q:'How does temperature affect solid solubility?', a:'For most solids, solubility increases with temperature.', trick:'Hot = dissolves more. More sugar in hot tea!' },
+  { icon:'🥄', q:'What does the baking soda experiment show?', a:'More baking soda dissolves at higher temperatures — showing increased solubility with heat.', trick:'More heat = more dissolving.' },
+  { icon:'🫧', q:'What is the effect of temperature on gas solubility?', a:'Gas solubility generally decreases as temperature increases.', trick:'Warm soda loses bubbles faster — gases escape!' },
+  { icon:'🐠', q:'What is dissolved oxygen?', a:'Oxygen gas dissolved in water. Essential for aquatic life (fish, plants, etc.).', trick:'D.O. = Dissolved Oxygen = Life support for fish.' },
+  { icon:'🐟', q:'Why do aquatic organisms need dissolved oxygen?', a:'They use dissolved oxygen for respiration — just like land animals breathe air.', trick:'Fish breathe water, not air, using dissolved O₂.' },
+  { icon:'🌊', q:'Cold vs warm water: which has more dissolved oxygen?', a:'Cold water has more dissolved oxygen — gas solubility decreases with temperature.', trick:'Cold = more gas. Warm = less gas. Think of soda.' },
+  { icon:'🏊', q:'What is floating?', a:'An object floats when it is less dense than the liquid it is in, or when buoyant force supports it.', trick:'Less dense = floats up.' },
+  { icon:'⬇️', q:'What is sinking?', a:'An object sinks when it is denser than the liquid and buoyant force is not enough to support it.', trick:'More dense = sinks down.' },
+  { icon:'🫙', q:'Why does oil float on water?', a:'Oil is less dense than water and does not dissolve in water, so it forms a layer on top.', trick:'Oil + water = layers (like salad dressing).' },
+  { icon:'⚖️', q:'What is density?', a:'The mass present in a unit volume of a substance. Density = Mass ÷ Volume.', trick:'Dense = packed tight. More mass, less space.' },
+  { icon:'📐', q:'What is the density formula?', a:'Density = Mass ÷ Volume. Units: g/cm³ or kg/m³.', trick:'D = M/V. Think: Dead Men Vote (D, M, V triangle)!' },
+  { icon:'🏛️', q:'What is the SI unit of density?', a:'kg/m³ (kilograms per cubic metre). g/cm³ and g/mL are also commonly used.', trick:'SI = kg/m³. Lab = g/cm³.' },
+  { icon:'📊', q:'What is relative density?', a:'Ratio of density of a substance to density of water. It has no unit.', trick:'No unit! It is just a ratio.' },
+  { icon:'⚖️', q:'What is mass?', a:'The quantity of matter present in an object. Measured in grams (g) or kilograms (kg).', trick:'Mass = Matter. Never changes with location.' },
+  { icon:'🖥️', q:'What is a digital weighing balance?', a:'An instrument used to measure mass accurately. Must be tared (zeroed) before use.', trick:'TARE = subtract container weight.' },
+  { icon:'🧪', q:'What is volume?', a:'The space occupied by an object or substance. Units: cm³, mL, L, m³.', trick:'Volume = Space. 1 mL = 1 cm³.' },
+  { icon:'🧫', q:'What is a measuring cylinder?', a:'A tall, narrow graduated container used to measure liquid volume accurately.', trick:'Narrow = accurate. Tall = easier to read small changes.' },
+  { icon:'🌊', q:'What is the meniscus?', a:'The curved surface formed by a liquid in a narrow container like a measuring cylinder.', trick:'MENiscus = the bending surface (like a MENu curved at edges).' },
+  { icon:'👁️', q:'How do you read the lower meniscus?', a:'Place your eye level with the bottom of the meniscus and read that value for water and colourless liquids.', trick:'Eye level + bottom of curve = correct reading.' },
+  { icon:'📦', q:'Formula for volume of a cuboid?', a:'Volume = Length × Width × Height. All measurements must be in the same unit.', trick:'LWH — Like Width Height. Easy!' },
+  { icon:'🪨', q:'What is the displacement method?', a:'Volume of irregular solid = Final water level − Initial water level (in mL = cm³).', trick:'Object in water → water rises by object\'s volume.' },
+  { icon:'🔢', q:'How do you calculate density?', a:'Measure mass with a balance, volume with measuring cylinder or calculation, then D = M ÷ V.', trick:'Mass → balance. Volume → cylinder. Divide!' },
+  { icon:'🔥', q:'How does temperature affect density?', a:'Heating → volume increases → density decreases. Cooling → volume decreases → density increases.', trick:'Hot = spreads out = less dense. Cold = contracts = denser.' },
+  { icon:'💨', q:'How does pressure affect density?', a:'Increasing pressure pushes particles closer → density increases. Gases are most affected.', trick:'Squeeze gas = denser gas. Solids barely change.' },
+  { icon:'🧊', q:'Why does ice float on water?', a:'Ice is less dense (≈0.917 g/cm³) than liquid water (1 g/cm³) because it has an open crystal lattice structure.', trick:'Ice = less dense than liquid water. Unusual!' },
+  { icon:'🎈', q:'Why does a hot-air balloon rise?', a:'Air inside is heated → less dense than cooler outside air → rises due to buoyancy.', trick:'Hot air = light = rises. Cool air = heavy = sinks.' },
+  { icon:'🛶', q:'Why does a bamboo raft float?', a:'Bamboo is less dense than water, so it floats even when carrying weight.', trick:'Bamboo = less dense than water = natural life jacket.' },
+  { icon:'🌊', q:'Why do people float easily in the Dead Sea?', a:'Dead Sea has very high salt concentration → much denser water → greater buoyancy → people float easily.', trick:'More salt = denser water = easier floating.' },
+  { icon:'🧂', q:'What is the Ningel village salt tradition?', a:'In Manipur, salty spring water is collected and boiled to evaporate water, leaving behind salt crystals and salt cakes.', trick:'Boil salty water → water evaporates → salt remains.' },
+];
+
+let fcIndex = 0;
+let fcOrder = FLASHCARDS.map((_,i) => i);
+let mastered = new Set();
+let isFlipped = false;
+
+function loadCard() {
+  isFlipped = false;
+  const card = document.getElementById('flashcard');
+  card.classList.remove('flipped');
+  const idx = fcOrder[fcIndex];
+  const fc  = FLASHCARDS[idx];
+  document.getElementById('fc-icon').textContent     = fc.icon;
+  document.getElementById('fc-question').textContent = fc.q;
+  document.getElementById('fc-answer').textContent   = fc.a;
+  document.getElementById('fc-trick').textContent    = '💡 ' + fc.trick;
+  document.getElementById('fc-counter').textContent  = `Card ${fcIndex+1} of ${FLASHCARDS.length}`;
+  const knowBtn = document.getElementById('know-btn');
+  knowBtn.textContent = mastered.has(idx) ? '⭐ Known!' : '✅ I Know This';
+  knowBtn.classList.toggle('known', mastered.has(idx));
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', isFlipped);
+}
+
+function nextCard() {
+  fcIndex = (fcIndex + 1) % FLASHCARDS.length;
+  loadCard();
+}
+function prevCard() {
+  fcIndex = (fcIndex - 1 + FLASHCARDS.length) % FLASHCARDS.length;
+  loadCard();
+}
+function shuffleCards() {
+  for (let i = fcOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [fcOrder[i], fcOrder[j]] = [fcOrder[j], fcOrder[i]];
+  }
+  fcIndex = 0; loadCard();
+}
+function markKnown() {
+  const idx = fcOrder[fcIndex];
+  if (mastered.has(idx)) { mastered.delete(idx); } else { mastered.add(idx); }
+  updateMasteredBar();
+  loadCard();
+}
+function resetMastered() {
+  mastered.clear(); updateMasteredBar(); loadCard();
+}
+function updateMasteredBar() {
+  const pct = (mastered.size / FLASHCARDS.length) * 100;
+  document.getElementById('fc-mastered-count').textContent = mastered.size;
+  document.getElementById('fc-mastered-fill').style.width  = pct + '%';
+}
+
+// Keyboard for flashcards
+document.getElementById('flashcard').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') flipCard();
+  if (e.key === 'ArrowRight') nextCard();
+  if (e.key === 'ArrowLeft')  prevCard();
+});
+
+/* ─────────────────────────────────────────────
+   QUIZ DATA
+───────────────────────────────────────────── */
+const QUIZ_QUESTIONS = [
+  // MCQs
+  { type:'MCQ', q:'Which of the following is a solution?', opts:['Sand in water','Salt water','Sawdust in water','Chalk in water'], ans:1, exp:'Salt water is a uniform mixture — the same throughout. The others are non-uniform mixtures (suspensions).' },
+  { type:'MCQ', q:'In sugar solution, sugar is the:', opts:['Solvent','Solute','Gas','Non-uniform part'], ans:1, exp:'Sugar dissolves in water. The dissolved substance is always the solute.' },
+  { type:'MCQ', q:'Air is considered a:', opts:['Solid solution','Liquid solution','Gaseous solution','Suspension'], ans:2, exp:'Air is a uniform mixture of gases — a gaseous solution with nitrogen as the main solvent.' },
+  { type:'MCQ', q:'A saturated solution at a fixed temperature can:', opts:['Dissolve unlimited solute','Dissolve no more solute','Become pure solvent','Never contain solute'], ans:1, exp:'At saturation, the solvent has reached its maximum dissolving capacity at that temperature.' },
+  { type:'MCQ', q:'For most solids, solubility in water:', opts:['Increases on heating','Decreases on heating','Becomes zero','Is unrelated to temperature'], ans:0, exp:'Most solids dissolve more at higher temperatures — think of sugar dissolving faster in hot tea.' },
+  { type:'MCQ', q:'Warm water usually contains:', opts:['More dissolved oxygen','Less dissolved oxygen','No hydrogen','More sand'], ans:1, exp:'Gas solubility generally decreases as temperature rises. So warm water holds less dissolved oxygen.' },
+  { type:'MCQ', q:'Density is calculated as:', opts:['Mass × Volume','Mass ÷ Volume','Volume ÷ Mass','Length × Width'], ans:1, exp:'Density = Mass ÷ Volume. Units: g/cm³ or kg/m³.' },
+  { type:'MCQ', q:'The curved surface of water in a measuring cylinder is called:', opts:['Meniscus','Solute','Density','Balance'], ans:0, exp:'The meniscus is the curved surface at the interface of a liquid in a narrow container.' },
+  { type:'MCQ', q:'Which object usually floats on water?', opts:['Stone','Iron nail','Oil drop','Sand particle'], ans:2, exp:'Oil is less dense than water and does not dissolve in it — it forms a layer on top.' },
+  { type:'MCQ', q:'Relative density has:', opts:['Unit kg','Unit cm³','Unit g/mL','No unit'], ans:3, exp:'Relative density is a ratio of two densities — the units cancel out, leaving a pure number.' },
+  { type:'MCQ', q:'For accurate meniscus reading, your eye should be:', opts:['Above the meniscus','Below the meniscus','Level with the meniscus','Far from the cylinder'], ans:2, exp:'Eye at the level of the meniscus prevents parallax error and gives an accurate reading.' },
+  { type:'MCQ', q:'Which of these is an example of a non-uniform mixture?', opts:['Salt water','Air','Sugar syrup','Sand in water'], ans:3, exp:'Sand does not dissolve in water and settles — making it a non-uniform mixture (suspension).' },
+  { type:'MCQ', q:'Volume of irregular solid = ?', opts:['Mass ÷ Density','Final water level − Initial water level','Length × Width × Height','Mass × Volume'], ans:1, exp:'The displacement method: the rise in water level equals the volume of the submerged solid.' },
+  { type:'MCQ', q:'Water has maximum density at:', opts:['0°C','4°C','100°C','25°C'], ans:1, exp:'Water has its highest density at 4°C — a unique property that makes ice float.' },
+  { type:'MCQ', q:'Which state of matter is most affected by pressure changes in density?', opts:['Solid','Liquid','Gas','All equally'], ans:2, exp:'Gas particles have large spaces between them — pressure easily compresses them, greatly changing density.' },
+  // Assertion-Reason
+  { type:'Assertion-Reason', q:'Assertion (A): ORS tastes the same in every sip.\nReason (R): Salt and sugar are evenly distributed in water.', opts:['Both A and R are true, R explains A','Both A and R are true, R does NOT explain A','A is true, R is false','A is false, R is true'], ans:0, exp:'ORS is a uniform solution — solute is evenly spread, so every sip has the same concentration.' },
+  { type:'Assertion-Reason', q:'Assertion (A): A saturated solution can dissolve more solute at the same temperature.\nReason (R): Solvent capacity has no limit.', opts:['Both true, R explains A','Both true, R does not explain A','A is true, R is false','Both A and R are false'], ans:3, exp:'Both statements are false! A saturated solution CANNOT dissolve more at the same temperature, and solvent capacity does have a limit.' },
+  { type:'Assertion-Reason', q:'Assertion (A): Fish need dissolved oxygen.\nReason (R): Oxygen dissolves in water in small but essential amounts.', opts:['Both true, R explains A','Both true, R does not explain A','A is true, R is false','A is false, R is true'], ans:0, exp:'Aquatic organisms extract dissolved oxygen from water for respiration.' },
+  { type:'Assertion-Reason', q:'Assertion (A): Hot air rises.\nReason (R): Heating generally decreases density.', opts:['Both true, R explains A','Both true, R does not explain A','A is true, R is false','A is false, R is true'], ans:0, exp:'Heated air expands, becomes less dense than surrounding cooler air, and rises due to buoyancy.' },
+  { type:'Assertion-Reason', q:'Assertion (A): Relative density has no unit.\nReason (R): It is the ratio of two densities.', opts:['Both true, R explains A','Both true, R does not explain A','A is true, R is false','A is false, R is true'], ans:0, exp:'When you divide g/cm³ by g/cm³, the units cancel — leaving a pure dimensionless number.' },
+  // Numericals
+  { type:'Numerical', q:'A block has mass 400 g and volume 40 cm³. Calculate its density.', opts:['5 g/cm³','10 g/cm³','0.1 g/cm³','400 g/cm³'], ans:1, exp:'Density = Mass ÷ Volume = 400 ÷ 40 = 10 g/cm³. This object sinks in water (denser than 1 g/cm³).' },
+  { type:'Numerical', q:'A stone has mass 225 g and volume 90 cm³. Will it float or sink in water?', opts:['Float (density < 1)','Sink (density = 2.5 g/cm³)','Float (density = 0.4 g/cm³)','Neither'], ans:1, exp:'Density = 225 ÷ 90 = 2.5 g/cm³. Since 2.5 > 1 (water density), the stone sinks.' },
+  { type:'Numerical', q:'Initial water level = 48 mL. After a key is lowered, level = 63 mL. Volume of key = ?', opts:['111 mL','15 cm³','48 cm³','63 cm³'], ans:1, exp:'Volume = 63 − 48 = 15 mL = 15 cm³. The rise in water level equals the volume of the object.' },
+  { type:'Numerical', q:'A cuboid is 12 cm × 5 cm × 3 cm. Its volume is:', opts:['20 cm³','180 cm³','60 cm³','120 cm³'], ans:1, exp:'Volume = 12 × 5 × 3 = 180 cm³. Always use the same unit for all three dimensions.' },
+  { type:'Numerical', q:'Iron block: mass = 600 g, density = 7.9 g/cm³. Find volume (approx).', opts:['4740 cm³','75.9 cm³','7.5 cm³','600 cm³'], ans:1, exp:'Volume = Mass ÷ Density = 600 ÷ 7.9 ≈ 75.9 cm³.' },
+];
+
+let qIndex = 0, qScore = 0, qWrong = 0;
+
+function startQuiz() {
+  qIndex = 0; qScore = 0; qWrong = 0;
+  document.getElementById('quiz-start-screen').classList.add('hidden');
+  document.getElementById('quiz-result-screen').classList.add('hidden');
+  document.getElementById('quiz-question-screen').classList.remove('hidden');
+  loadQuestion();
+  visitedTabs.add('quiz'); updateProgress();
+}
+
+function loadQuestion() {
+  const qq = QUIZ_QUESTIONS[qIndex];
+  document.getElementById('q-num').textContent    = qIndex + 1;
+  document.getElementById('q-score').textContent  = qScore;
+  document.getElementById('q-progress-fill').style.width = ((qIndex / QUIZ_QUESTIONS.length) * 100) + '%';
+  document.getElementById('q-type-badge').textContent    = qq.type;
+  document.getElementById('q-text').textContent   = qq.q;
+  document.getElementById('q-feedback').className = 'q-feedback hidden';
+  document.getElementById('q-feedback').textContent = '';
+  document.getElementById('btn-next').classList.add('hidden');
+
+  const optsDiv = document.getElementById('q-options');
+  optsDiv.innerHTML = '';
+  qq.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'q-opt';
+    btn.textContent = `${['A','B','C','D'][i]}. ${opt}`;
+    btn.addEventListener('click', () => answerQuestion(i, btn));
+    optsDiv.appendChild(btn);
+  });
+}
+
+function answerQuestion(chosen, btn) {
+  const qq = QUIZ_QUESTIONS[qIndex];
+  document.querySelectorAll('.q-opt').forEach(b => b.disabled = true);
+  const fb = document.getElementById('q-feedback');
+  if (chosen === qq.ans) {
+    qScore++;
+    btn.classList.add('correct');
+    fb.className = 'q-feedback correct-fb';
+    fb.innerHTML = '✅ Correct! ' + qq.exp;
+  } else {
+    qWrong++;
+    btn.classList.add('wrong');
+    document.querySelectorAll('.q-opt')[qq.ans].classList.add('correct');
+    fb.className = 'q-feedback wrong-fb';
+    fb.innerHTML = '❌ Not quite. ' + qq.exp;
+  }
+  fb.classList.remove('hidden');
+  document.getElementById('btn-next').classList.remove('hidden');
+  document.getElementById('q-score').textContent = qScore;
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (qIndex >= QUIZ_QUESTIONS.length) {
+    showResult();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-question-screen').classList.add('hidden');
+  const screen = document.getElementById('quiz-result-screen');
+  screen.classList.remove('hidden');
+  const pct = Math.round((qScore / QUIZ_QUESTIONS.length) * 100);
+  document.getElementById('rs-correct').textContent = qScore;
+  document.getElementById('rs-wrong').textContent   = qWrong;
+  document.getElementById('rs-pct').textContent     = pct + '%';
+  let badge = '', title = '', trophy = '';
+  if (pct >= 91)      { badge='🥇 Solution Master';   title='Outstanding!';    trophy='🏆'; document.getElementById('result-badge').className='result-badge badge-master';   }
+  else if (pct >= 71) { badge='🔬 Science Explorer'; title='Well done!';      trophy='🎖️'; document.getElementById('result-badge').className='result-badge badge-explorer'; }
+  else if (pct >= 41) { badge='✅ Good Effort';       title='Keep it up!';     trophy='👍'; document.getElementById('result-badge').className='result-badge badge-good';     }
+  else                { badge='📚 Keep Practising';  title='Don\'t give up!'; trophy='💪'; document.getElementById('result-badge').className='result-badge badge-keep';     }
+  document.getElementById('result-trophy').textContent = trophy;
+  document.getElementById('result-title').textContent  = title;
+  document.getElementById('result-sub').textContent    = `You scored ${qScore} out of ${QUIZ_QUESTIONS.length} questions.`;
+  document.getElementById('result-badge').textContent  = badge;
+}
+
+function restartQuiz() {
+  document.getElementById('quiz-result-screen').classList.add('hidden');
+  document.getElementById('quiz-start-screen').classList.remove('hidden');
+}
+
+/* ─────────────────────────────────────────────
+   SUBJECTIVE Q&A DATA
+───────────────────────────────────────────── */
+const SUBJECTIVE = [
+  {
+    section: '⚡ A. Very Short Answer Questions',
+    questions: [
+      { q:'What is a solution?', a:'A solution is a uniform mixture formed when one or more solutes dissolve in a solvent.' },
+      { q:'Define solute.', a:'A solute is the substance that dissolves in a solvent to form a solution.' },
+      { q:'Define solvent.', a:'A solvent is the substance in which the solute dissolves. It is usually present in larger amount.' },
+      { q:'What is density?', a:'Density is the mass present in unit volume of a substance. Density = Mass ÷ Volume.' },
+      { q:'What is meniscus?', a:'The meniscus is the curved surface formed by a liquid in a narrow container like a measuring cylinder.' },
+      { q:'State the SI unit of density.', a:'The SI unit of density is kg/m³ (kilograms per cubic metre).' },
+      { q:'What is relative density?', a:'Relative density is the ratio of the density of a substance to the density of water. It has no unit.' },
+      { q:'Give one example of a gaseous solution.', a:'Air is a gaseous solution — oxygen, CO₂, and other gases are dissolved in nitrogen.' },
+    ]
+  },
+  {
+    section: '📝 B. Short Answer Questions',
+    questions: [
+      { q:'Why does ORS taste the same in every sip?', a:'ORS is a uniform solution. Salt and sugar are evenly distributed throughout the water, so every sip has the same concentration of solute.' },
+      { q:'Why does salt stop dissolving after a certain point?', a:'The solution becomes saturated — it has reached its maximum dissolving capacity at that temperature. No more salt can dissolve unless temperature is increased.' },
+      { q:'Why is water called a good solvent?', a:'Water dissolves a large variety of substances including salts, sugars, gases, and many minerals. This is why it is called the universal solvent.' },
+      { q:'Why does warm water contain less dissolved oxygen?', a:'Gas solubility decreases as temperature increases. Warm water holds less dissolved oxygen, which can be harmful to aquatic organisms.' },
+      { q:'Why are measuring cylinders narrow and tall?', a:'A narrow cylinder means small changes in volume produce a visible rise in liquid level, allowing more accurate readings of small volumes.' },
+      { q:'Distinguish between saturated and unsaturated solutions.', a:'Saturated: no more solute can dissolve at that temperature. Unsaturated: more solute can still dissolve. A saturated solution on heating may become unsaturated.' },
+      { q:'What is the difference between mass and weight?', a:'Mass is the quantity of matter in an object (measured in g or kg; constant everywhere). Weight is the force with which Earth pulls the object (measured in newtons; varies with gravity).' },
+    ]
+  },
+  {
+    section: '📚 C. Long Answer Questions',
+    questions: [
+      { q:'Explain saturated and unsaturated solutions with an activity.', a:'Activity: Take half a glass of water. Add salt spoon by spoon, stirring after each addition.\n\n• At first, salt dissolves completely → unsaturated solution.\n• After several spoons, salt no longer dissolves and stays at the bottom → saturated solution.\n• On heating the saturated solution, more salt dissolves → it becomes unsaturated again.\n\nConclusion: Solubility depends on temperature. A saturated solution at one temperature may become unsaturated when heated.' },
+      { q:'Explain how temperature affects solubility of solids and gases.', a:'Effect on Solids:\n• Most solids dissolve more as temperature increases.\n• Example: Baking soda dissolves more at 70°C than at 20°C.\n• A saturated solution when heated may become unsaturated.\n\nEffect on Gases:\n• Gas solubility generally decreases as temperature increases.\n• Example: Warm water holds less dissolved oxygen than cold water.\n• Real-life impact: Aquatic organisms suffer in warm, polluted water due to low dissolved oxygen.' },
+      { q:'Explain how to measure the volume of an irregular solid.', a:'Method: Water Displacement\n\nSteps:\n1. Take a measuring cylinder and pour water. Note the initial level (e.g., 50 mL).\n2. Carefully lower the irregular solid (e.g., a stone or key) into the cylinder using a thread.\n3. Note the new water level (e.g., 55 mL).\n4. Volume of solid = Final level − Initial level = 55 − 50 = 5 mL = 5 cm³.\n\nKey points: The solid must be fully submerged. The solid must not dissolve in water. 1 mL = 1 cm³.' },
+      { q:'Explain why objects float or sink in water.', a:'Whether an object floats or sinks depends mainly on density:\n• If an object is less dense than water (density < 1 g/cm³), it floats.\n• If denser (density > 1 g/cm³), it sinks.\n\nExamples:\n• Cork floats (density ≈ 0.25 g/cm³)\n• Oil floats (density ≈ 0.8 g/cm³)\n• Stone sinks (density ≈ 2.5–3 g/cm³)\n\nImportant note: Shape and trapped air also matter. A steel ship floats because its hollow shape traps air, reducing overall density. An egg floats in salty water because salt increases water density.' },
+      { q:'Explain why ice floats on water and why it is important for aquatic life.', a:'Why ice floats:\n• Water is most dense at 4°C (1.000 g/cm³).\n• When water freezes at 0°C, water molecules form an open, hexagonal crystal lattice.\n• This open structure takes up more space, so ice expands.\n• Result: Ice density ≈ 0.917 g/cm³ < water density → Ice floats.\n\nImportance for aquatic life:\n• In winter, the surface of lakes freezes to form an ice layer.\n• This ice acts as an insulating blanket.\n• Water below the ice stays liquid (and above 0°C), allowing fish, plants, and other organisms to survive.\n• If ice were denser and sank, lakes would freeze solid from the bottom up, killing all aquatic life.' },
+    ]
+  },
+  {
+    section: '🔢 D. Numerical Questions (Worked Solutions)',
+    questions: [
+      { q:'Mass = 400 g, Volume = 40 cm³. Find density.', a:'Formula: Density = Mass ÷ Volume\n= 400 ÷ 40\n= 10 g/cm³\n\nConclusion: Density (10 g/cm³) > water density (1 g/cm³) → Object sinks.' },
+      { q:'A stone has mass 225 g and volume 90 cm³. Find density and predict float/sink.', a:'Formula: Density = Mass ÷ Volume\n= 225 ÷ 90\n= 2.5 g/cm³\n\nConclusion: 2.5 g/cm³ > 1 g/cm³ (water) → Stone sinks in water.' },
+      { q:'Iron block: mass = 600 g, density = 7.9 g/cm³. Find volume.', a:'Rearranged formula: Volume = Mass ÷ Density\n= 600 ÷ 7.9\n≈ 75.9 cm³\n\nNote: Density of iron (7.9 g/cm³) >> water (1 g/cm³), so iron sinks.' },
+      { q:'Initial water level = 48 mL, Final water level = 63 mL. Find volume of key.', a:'Volume of key = Final level − Initial level\n= 63 − 48\n= 15 mL\n= 15 cm³\n\n(1 mL displaced water = 1 cm³ of solid)' },
+      { q:'A cuboid has length = 12 cm, width = 5 cm, height = 3 cm. Find volume.', a:'Formula: Volume = Length × Width × Height\n= 12 × 5 × 3\n= 180 cm³\n\nNote: All measurements must be in the same unit.' },
+    ]
+  },
+];
+
+function buildSubjective() {
+  const container = document.getElementById('subjective-container');
+  SUBJECTIVE.forEach(section => {
+    const secDiv = document.createElement('div');
+    secDiv.className = 'subj-section';
+    secDiv.innerHTML = `<div class="subj-section-title">${section.section}</div>`;
+    section.questions.forEach((qa, qi) => {
+      const card = document.createElement('div');
+      card.className = 'subj-card';
+      const uid = `sqans-${Math.random().toString(36).slice(2)}`;
+      card.innerHTML = `
+        <button class="subj-q" onclick="toggleSubj(this,'${uid}')" aria-expanded="false" aria-controls="${uid}">
+          <div class="subj-q-num">${qi+1}</div>
+          <span class="subj-q-text">${qa.q}</span>
+          <span class="subj-chevron">▾</span>
+        </button>
+        <div class="subj-answer" id="${uid}">
+          ${qa.a.replace(/\n/g,'<br/>')}
+        </div>
+      `;
+      secDiv.appendChild(card);
+    });
+    container.appendChild(secDiv);
+  });
+}
+
+function toggleSubj(btn, uid) {
+  const ans = document.getElementById(uid);
+  const isOpen = ans.classList.contains('open');
+  ans.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  btn.setAttribute('aria-expanded', !isOpen);
+}
+
+/* ─────────────────────────────────────────────
+   GAME 1 — SOLUTE OR SOLVENT?
+───────────────────────────────────────────── */
+const G1_ITEMS = [
+  { name:'Salt 🧂',    type:'solute'  },
+  { name:'Sugar 🍬',   type:'solute'  },
+  { name:'Water 💧',   type:'solvent' },
+  { name:'Nitrogen 💨',type:'solvent' },
+  { name:'Oxygen 🫁',  type:'solute'  },
+  { name:'Lemon juice 🍋', type:'solute'},
+  { name:'Sand 🏖️',    type:'solute'  },
+  { name:'Oil 🫙',     type:'solute'  },
+];
+
+let g1Score = 0;
+
+function buildG1() {
+  g1Score = 0;
+  document.getElementById('g1-score').textContent     = 0;
+  document.getElementById('g1-remaining').textContent = G1_ITEMS.length;
+  document.getElementById('g1-solute-items').innerHTML  = '';
+  document.getElementById('g1-solvent-items').innerHTML = '';
+  document.getElementById('g1-feedback').textContent   = '';
+  const row = document.getElementById('g1-items-row');
+  row.innerHTML = '';
+  const shuffled = [...G1_ITEMS].sort(() => Math.random() - 0.5);
+  shuffled.forEach(item => {
+    const btn = document.createElement('button');
+    btn.className = 'g1-item';
+    btn.textContent = item.name;
+    btn.dataset.type = item.type;
+    btn.setAttribute('aria-label', `Classify ${item.name}`);
+    btn.addEventListener('click', () => classifyG1(item, btn));
+    row.appendChild(btn);
+  });
+}
+
+function classifyG1(item, btn) {
+  // Show two classification buttons
+  const fb = document.getElementById('g1-feedback');
+  btn.style.display = 'none';
+  // prompt classification via inline buttons
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:inline-flex;gap:6px;margin:4px;';
+  ['Solute','Solvent'].forEach(choice => {
+    const choiceBtn = document.createElement('button');
+    choiceBtn.className = 'g1-item';
+    choiceBtn.style.background = choice === 'Solute' ? '#00bcd4' : '#f77f00';
+    choiceBtn.textContent = `${item.name} → ${choice}`;
+    choiceBtn.addEventListener('click', () => {
+      const correct = (choice.toLowerCase() === item.type);
+      const targetId = correct ? (item.type === 'solute' ? 'g1-solute-items' : 'g1-solvent-items') : (item.type === 'solute' ? 'g1-solvent-items' : 'g1-solute-items');
+      const placed = document.createElement('span');
+      placed.className = 'g1-placed';
+      placed.textContent = item.name;
+      placed.style.borderColor = correct ? '#2a9d8f' : '#e63946';
+      document.getElementById(correct ? (item.type === 'solute' ? 'g1-solute-items' : 'g1-solvent-items') : (item.type !== 'solute' ? 'g1-solute-items' : 'g1-solvent-items')).appendChild(placed);
+      if (correct) { g1Score++; fb.textContent = `✅ Correct! ${item.name} is a ${item.type}.`; fb.style.color = '#2a9d8f'; }
+      else         { fb.textContent = `❌ Oops! ${item.name} is a ${item.type}, not ${choice.toLowerCase()}.`; fb.style.color = '#e63946'; }
+      document.getElementById('g1-score').textContent     = g1Score;
+      const remaining = document.getElementById('g1-items-row').querySelectorAll('.g1-item:not([style*="none"])').length;
+      document.getElementById('g1-remaining').textContent = remaining;
+      wrap.remove();
+    });
+    wrap.appendChild(choiceBtn);
+  });
+  btn.parentNode.insertBefore(wrap, btn.nextSibling);
+  btn.style.display = '';
+  btn.style.opacity = '0.4';
+  btn.disabled = true;
+}
+
+function resetG1() { buildG1(); }
+
+/* ─────────────────────────────────────────────
+   GAME 2 — FLOAT OR SINK?
+───────────────────────────────────────────── */
+const G2_ITEMS = [
+  { obj:'🪨', name:'Stone',        answer:'sink',  density:'≈2.5 g/cm³ — much denser than water (1 g/cm³).' },
+  { obj:'🪶', name:'Cork',         answer:'float', density:'≈0.25 g/cm³ — much less dense than water.' },
+  { obj:'🫙', name:'Oil drop',     answer:'float', density:'≈0.8 g/cm³ — less dense than water, forms a layer on top.' },
+  { obj:'🪙', name:'Coin',         answer:'sink',  density:'≈8.9 g/cm³ (copper) — much denser than water.' },
+  { obj:'🧊', name:'Ice cube',     answer:'float', density:'≈0.917 g/cm³ — less dense than liquid water!' },
+  { obj:'🛶', name:'Bamboo raft',  answer:'float', density:'Bamboo density < 1 g/cm³ — naturally buoyant.' },
+  { obj:'🥚', name:'Egg (plain water)', answer:'sink', density:'Egg density > 1 g/cm³ — sinks in fresh water.' },
+  { obj:'🥚', name:'Egg (salt water)', answer:'float', density:'Salt water is denser — buoyancy force increases and egg floats!' },
+];
+
+let g2Index = 0, g2Score = 0, g2Streak = 0;
+
+function buildG2() { g2Index = 0; g2Score = 0; g2Streak = 0; loadG2Item(); }
+
+function loadG2Item() {
+  if (g2Index >= G2_ITEMS.length) {
+    document.getElementById('g2-card').innerHTML = `<div style="font-size:3rem;margin-bottom:1rem">🎉</div><div style="font-size:1.2rem;font-weight:700;color:#007c89">All done! Score: ${g2Score}/${G2_ITEMS.length}</div>`;
+    document.getElementById('g2-next-btn').style.display = 'none';
+    return;
+  }
+  const item = G2_ITEMS[g2Index];
+  document.getElementById('g2-object').textContent = item.obj;
+  document.getElementById('g2-name').textContent   = item.name;
+  document.getElementById('g2-feedback').className = 'g2-feedback hidden';
+  document.getElementById('g2-feedback').textContent = '';
+  document.getElementById('g2-next-btn').style.display = 'none';
+  document.querySelectorAll('.g2-btn').forEach(b => b.disabled = false);
+  document.getElementById('g2-score').textContent  = g2Score;
+  document.getElementById('g2-streak').textContent = `Streak: ${g2Streak} 🔥`;
+}
+
+function predictG2(guess) {
+  const item = G2_ITEMS[g2Index];
+  const fb   = document.getElementById('g2-feedback');
+  document.querySelectorAll('.g2-btn').forEach(b => b.disabled = true);
+  if (guess === item.answer) {
+    g2Score++; g2Streak++;
+    fb.className = 'g2-feedback correct-fb';
+    fb.innerHTML = `✅ Correct! ${item.name} ${item.answer === 'float' ? 'floats' : 'sinks'}.<br/>💡 ${item.density}`;
+  } else {
+    g2Streak = 0;
+    fb.className = 'g2-feedback wrong-fb';
+    fb.innerHTML = `❌ Not quite! It ${item.answer}s.<br/>💡 ${item.density}`;
+  }
+  fb.classList.remove('hidden');
+  document.getElementById('g2-score').textContent  = g2Score;
+  document.getElementById('g2-streak').textContent = `Streak: ${g2Streak} 🔥`;
+  document.getElementById('g2-next-btn').style.display = 'inline-block';
+}
+
+function nextG2Item()  { g2Index++; loadG2Item(); }
+function resetG2()     { buildG2(); }
+
+/* ─────────────────────────────────────────────
+   GAME 3 — DENSITY DETECTIVE
+───────────────────────────────────────────── */
+const G3_PUZZLES = [
+  { objs:[{icon:'🪨',name:'Object A',mass:200,vol:40},{icon:'🪵',name:'Object B',mass:240,vol:60}], question:'Which object is denser?', answer:0, exp:'A: 200÷40=5 g/cm³ | B: 240÷60=4 g/cm³ → A is denser.' },
+  { objs:[{icon:'🧊',name:'Ice',mass:92,vol:100},{icon:'💧',name:'Water',mass:100,vol:100}], question:'Which is denser?', answer:1, exp:'Ice: 92÷100=0.92 g/cm³ | Water: 100÷100=1 g/cm³ → Water is denser (that\'s why ice floats!).' },
+  { objs:[{icon:'🔩',name:'Iron',mass:79,vol:10},{icon:'🪵',name:'Wood',mass:5,vol:10}], question:'Which floats in water?', answer:1, exp:'Iron: 79÷10=7.9 g/cm³ (sinks) | Wood: 5÷10=0.5 g/cm³ (floats). So Wood floats!' },
+  { objs:[{icon:'🧴',name:'Oil',mass:80,vol:100},{icon:'💧',name:'Water',mass:100,vol:100}], question:'Which floats on the other?', answer:0, exp:'Oil: 80÷100=0.8 g/cm³ | Water: 1 g/cm³ → Oil is less dense and floats on water.' },
+  { objs:[{icon:'🪙',name:'Coin',mass:89,vol:10},{icon:'🍎',name:'Apple',mass:50,vol:70}], question:'Which sinks in water?', answer:0, exp:'Coin: 89÷10=8.9 g/cm³ (sinks) | Apple: 50÷70≈0.71 g/cm³ (floats). Coin sinks!' },
+];
+
+let g3CurrentPuzzle = null;
+
+function loadG3() {
+  const puzzle = G3_PUZZLES[Math.floor(Math.random() * G3_PUZZLES.length)];
+  g3CurrentPuzzle = puzzle;
+  const area = document.getElementById('g3-area');
+  area.innerHTML = `
+    <div class="g3-puzzle">
+      <div class="g3-objects">
+        ${puzzle.objs.map(o => `
+          <div class="g3-obj">
+            <div class="g3-obj-icon">${o.icon}</div>
+            <div class="g3-obj-name">${o.name}</div>
+            <div class="g3-obj-data">Mass: ${o.mass} g | Volume: ${o.vol} cm³</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="g3-question">${puzzle.question}</div>
+      <div class="g3-options">
+        ${puzzle.objs.map((o,i) => `<button class="g3-opt" onclick="answerG3(${i},this)">${o.name}</button>`).join('')}
+      </div>
+      <div class="g3-solution" id="g3-solution"></div>
+    </div>
+  `;
+}
+
+function answerG3(chosen, btn) {
+  document.querySelectorAll('.g3-opt').forEach(b => b.disabled = true);
+  const correct = chosen === g3CurrentPuzzle.answer;
+  btn.classList.add(correct ? 'correct-ans' : 'wrong-ans');
+  if (!correct) document.querySelectorAll('.g3-opt')[g3CurrentPuzzle.answer].classList.add('correct-ans');
+  const sol = document.getElementById('g3-solution');
+  sol.innerHTML = `${correct ? '✅ Correct!' : '❌ Not quite.'}<br/><strong>Step-by-step:</strong><br/>${g3CurrentPuzzle.exp}`;
+  sol.style.display = 'block';
+}
+
+/* ─────────────────────────────────────────────
+   GAME 4 — BUILD A SOLUTION
+───────────────────────────────────────────── */
+const G4_SOLUTES  = ['Salt 🧂','Sugar 🍬','Sand 🏖️','Oil 🫙','Baking soda 🥄','Oxygen 🫧'];
+const G4_SOLVENTS = ['Water 💧','Vinegar 🍶','Alcohol 🧴','Oil 🛢️'];
+const G4_RESULTS  = {
+  'Salt 🧂|Water 💧':           { type:'success', result:'🧪 Salt Solution!', desc:'Salt dissolves in water → clear salt solution (uniform mixture). Every sip tastes the same!' },
+  'Sugar 🍬|Water 💧':          { type:'success', result:'🍹 Sugar Syrup!',   desc:'Sugar dissolves in water → sweet uniform solution. More sugar = more concentrated.' },
+  'Sand 🏖️|Water 💧':          { type:'fail',    result:'🌊 Sand Suspension!',desc:'Sand does NOT dissolve in water → non-uniform mixture. Sand settles to the bottom.' },
+  'Oil 🫙|Water 💧':            { type:'fail',    result:'💧 Oil Floats!',    desc:'Oil does NOT dissolve in water → two layers form (oil floats, water sinks). Not a solution!' },
+  'Baking soda 🥄|Water 💧':   { type:'success', result:'⚗️ Baking Soda Solution!', desc:'Baking soda dissolves in water → uniform solution. More dissolves in hot water!' },
+  'Oxygen 🫧|Water 💧':         { type:'success', result:'🐟 Dissolved Oxygen!', desc:'Oxygen gas dissolves in water in small amounts → supports aquatic life!' },
+  'Salt 🧂|Vinegar 🍶':         { type:'neutral', result:'🧪 Salt in Vinegar',  desc:'Salt partially dissolves in vinegar. Used in pickling and food preservation.' },
+  'Oil 🫙|Oil 🛢️':             { type:'success', result:'🛢️ Oil Mixture!',    desc:'Like dissolves like — oils mix uniformly. Nonpolar solvents dissolve nonpolar solutes.' },
+};
+
+let g4Solute = null, g4Solvent = null;
+
+function buildG4() {
+  const solDiv = document.getElementById('g4-solutes');
+  const solvDiv= document.getElementById('g4-solvents');
+  G4_SOLUTES.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'g4-opt'; btn.textContent = s;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#g4-solutes .g4-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected'); g4Solute = s;
+    });
+    solDiv.appendChild(btn);
+  });
+  G4_SOLVENTS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'g4-opt'; btn.textContent = s;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#g4-solvents .g4-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected'); g4Solvent = s;
+    });
+    solvDiv.appendChild(btn);
+  });
+}
+
+function buildSolution() {
+  if (!g4Solute || !g4Solvent) {
+    alert('Please choose both a solute and a solvent!'); return;
+  }
+  const key = `${g4Solute}|${g4Solvent}`;
+  const res  = G4_RESULTS[key] || { type:'neutral', result:'🧪 Mixture Created!', desc:`${g4Solute} + ${g4Solvent} = a mixture. Properties depend on solubility of the solute in this solvent.` };
+  const resultDiv = document.getElementById('g4-result');
+  const beaker    = document.getElementById('g4-beaker');
+  const text      = document.getElementById('g4-result-text');
+  resultDiv.className = `g4-result g4-${res.type}`;
+  beaker.textContent  = res.type === 'success' ? '⚗️' : res.type === 'fail' ? '🌊' : '🧪';
+  beaker.style.animation = 'none'; void beaker.offsetWidth; beaker.style.animation = 'mix-anim 0.5s ease';
+  text.innerHTML = `<strong>${res.result}</strong><br/>${res.desc}`;
+  resultDiv.classList.remove('hidden');
+}
+
+/* ─────────────────────────────────────────────
+   GAME SELECTION
+───────────────────────────────────────────── */
+function selectGame(btn, id) {
+  document.querySelectorAll('.game-sel-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+/* ─────────────────────────────────────────────
+   INITIALISE EVERYTHING
+───────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  buildNotes();
+  buildMindMap();
+  buildSubjective();
+  buildG1();
+  buildG2();
+  loadG3();
+  buildG4();
+  loadCard();
+  updateProgress();
+});
+
+
+// Auto-switch tab based on URL hash (e.g. solution-lab-ch9.html#notes)
+(function() {
+  var hash = window.location.hash.replace('#', '');
+  var valid = ['home','notes','mindmap','flashcards','quiz','subjective','gamezone'];
+  if (hash && valid.indexOf(hash) !== -1) {
+    switchTab(hash);
+  }
+})();
+
+</script>
+</body>
+</html>
