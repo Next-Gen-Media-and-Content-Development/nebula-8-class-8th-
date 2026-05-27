@@ -193,139 +193,21 @@ html, body {
 @keyframes cfadeout { to{opacity:0;transform:translateY(6px);} }
 @keyframes cfadein  { from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);} }
 
-/* ── Chapter 9 Solution Lab card ── */
-.ch9-lab {
-  border-color: rgba(170,255,0,.5) !important;
-  box-shadow: 0 0 0 1px rgba(170,255,0,.3), 0 8px 28px rgba(0,0,0,.5) !important;
-}
-.ch9-lab-tag {
-  position: absolute;
-  top: 10px; right: 10px;
-  background: rgba(170,255,0,.12);
-  border: 1px solid rgba(170,255,0,.35);
-  color: #AAFF00;
-  border-radius: 6px;
-  padding: 2px 8px;
-  font-family: 'Orbitron', monospace;
-  font-size: 7px;
-  font-weight: 700;
-  letter-spacing: .1em;
-}
-.ch9-open-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.ch9-btn {
+  display: inline-block;
   background: rgba(170,255,0,.15);
-  color: #AAFF00;
+  color: #AAFF00 !important;
   border: 1px solid rgba(170,255,0,.4);
   border-radius: 6px;
-  padding: 4px 11px;
+  padding: 4px 10px;
   font-size: 8px;
   font-family: 'Orbitron', monospace;
   font-weight: 700;
   letter-spacing: .1em;
   text-decoration: none;
-  cursor: none;
   transition: all .2s;
 }
-.ch9-open-btn:hover {
-  background: rgba(170,255,0,.28);
-  box-shadow: 0 0 12px rgba(170,255,0,.3);
-}
-
-
-/* ── CH-9 Subbranch ── */
-#ch9-subbranch {
-  display: none;
-  flex-direction: column;
-  gap: 14px;
-  animation: fadeRight .3s ease both;
-}
-#ch9-subbranch.active { display: flex; }
-
-.sb-breadcrumb {
-  display: flex; align-items: center; gap: 8px;
-  font-family: 'Orbitron', monospace;
-  font-size: 8px; letter-spacing: .2em;
-  color: rgba(255,255,255,.3);
-}
-.sb-breadcrumb span { color: #AAFF00; }
-.sb-breadcrumb .sep { color: rgba(255,255,255,.15); }
-
-.sb-back-btn {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: 'Orbitron', monospace; font-size: 9px;
-  font-weight: 700; letter-spacing: .15em;
-  color: #AAFF00;
-  background: rgba(170,255,0,.08);
-  border: 1px solid rgba(170,255,0,.3);
-  border-radius: 6px; padding: 7px 14px;
-  cursor: none; transition: all .2s; width: fit-content;
-}
-.sb-back-btn:hover { background: rgba(170,255,0,.18); }
-.sb-back-btn svg { width: 11px; height: 11px; stroke: #AAFF00; fill: none; stroke-width: 2.5; }
-
-.sb-header {
-  padding: 14px 18px;
-  background: rgba(170,255,0,.05);
-  border: 1px solid rgba(170,255,0,.15);
-  border-radius: 10px;
-}
-.sb-header-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 13px; font-weight: 700;
-  color: #AAFF00; letter-spacing: .06em;
-  margin-bottom: 4px;
-}
-.sb-header-sub {
-  font-size: 9px; letter-spacing: .15em;
-  color: rgba(200,220,255,.35);
-}
-
-.sb-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
-}
-
-.sb-card {
-  position: relative;
-  padding: 16px 14px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(170,255,0,.15);
-  background: linear-gradient(135deg, rgba(0,124,137,.15), rgba(0,188,212,.08));
-  cursor: none;
-  transition: all .25s cubic-bezier(.22,1,.36,1);
-  text-decoration: none;
-  display: block;
-}
-.sb-card:hover {
-  border-color: rgba(170,255,0,.4);
-  background: linear-gradient(135deg, rgba(0,124,137,.25), rgba(0,188,212,.15));
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
-}
-.sb-card-bar {
-  position: absolute; top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #AAFF00, transparent);
-}
-.sb-card-icon { font-size: 22px; margin-bottom: 8px; }
-.sb-card-title {
-  font-family: 'Orbitron', monospace;
-  font-size: 10px; font-weight: 700;
-  color: #AAFF00; letter-spacing: .06em;
-  margin-bottom: 4px;
-}
-.sb-card-desc {
-  font-size: 9px; letter-spacing: .06em;
-  color: rgba(160,185,230,.4); line-height: 1.5;
-}
-.sb-card-arrow {
-  position: absolute; bottom: 10px; right: 10px;
-  font-size: 10px; color: rgba(170,255,0,.4);
-}
-
+.ch9-btn:hover { background: rgba(170,255,0,.3); }
 </style>
 </head>
 <body>
@@ -436,78 +318,6 @@ html, body {
       <div id="chapter-area">
         <div class="section-label">Chapter Index</div>
         <div class="chapter-grid" id="chapterGrid"></div>
-      </div>
-
-      <!-- CH-9 Subbranch -->
-      <div id="ch9-subbranch">
-        <div>
-          <div class="sb-breadcrumb">
-            <span>NEBULA-8</span>
-            <span class="sep">›</span>
-            <span>Science</span>
-            <span class="sep">›</span>
-            <span>CUR · CH-9</span>
-          </div>
-        </div>
-        <button class="sb-back-btn" onclick="closeSubbranch()">
-          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to Science
-        </button>
-        <div class="sb-header">
-          <div class="sb-header-title">⚗️ The Amazing World of Solutes, Solvents &amp; Solutions</div>
-          <div class="sb-header-sub">CUR · CH-9 · Chemistry · Class 8 · 7 Learning Modules</div>
-        </div>
-        <div class="sb-grid">
-          <a class="sb-card" href="solution-lab-ch9.html#home" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">🏠</div>
-            <div class="sb-card-title">Home</div>
-            <div class="sb-card-desc">Overview, key concepts &amp; quick stats</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-          <a class="sb-card" href="solution-lab-ch9.html#notes" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">📖</div>
-            <div class="sb-card-title">Notes</div>
-            <div class="sb-card-desc">20 interactive accordion topic cards</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-          <a class="sb-card" href="solution-lab-ch9.html#mindmap" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">🕸️</div>
-            <div class="sb-card-title">Mind Map</div>
-            <div class="sb-card-desc">Spider-web concept map, 18 nodes</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-          <a class="sb-card" href="solution-lab-ch9.html#flashcards" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">🃏</div>
-            <div class="sb-card-title">Flashcards</div>
-            <div class="sb-card-desc">45 flip cards with mastery tracking</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-          <a class="sb-card" href="solution-lab-ch9.html#quiz" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">🧠</div>
-            <div class="sb-card-title">Quiz</div>
-            <div class="sb-card-desc">25 questions — MCQ, A-R &amp; Numericals</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-          <a class="sb-card" href="solution-lab-ch9.html#subjective" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">✍️</div>
-            <div class="sb-card-title">Q &amp; A</div>
-            <div class="sb-card-desc">Subjective answers for exam practice</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-          <a class="sb-card" href="solution-lab-ch9.html#gamezone" target="_blank">
-            <div class="sb-card-bar"></div>
-            <div class="sb-card-icon">🎮</div>
-            <div class="sb-card-title">Game Zone</div>
-            <div class="sb-card-desc">4 interactive science games</div>
-            <div class="sb-card-arrow">→</div>
-          </a>
-        </div>
       </div>
 
       <div id="status-bar">
@@ -774,23 +584,39 @@ function renderSubject(key) {
       card.style.setProperty('--cc-glow', `rgba(${c.rgb},.12)`);
       card.style.setProperty('--cp-dur', '.4s');
       card.style.setProperty('--cp-delay', `${i * 0.04}s`);
-      if(ch._sl) card.classList.add('ch9-lab');
       card.innerHTML = `
         <div class="card-bar"></div>
         ${ch.locked ? '<div class="lock-badge">🔒</div>' : ''}
-        ${ch._sl ? '<div class="ch9-lab-tag">⚗️ Lab Available</div>' : ''}
         <div class="ch-num">${ch.num}</div>
         <div class="ch-title">${ch.title}</div>
         <div class="ch-desc">${ch.desc}</div>
         <div class="card-footer">
           <span class="ch-type">${ch.type}</span>
-          ${ch._sl
-            ? '<button class="ch9-open-btn" onclick="openSubbranch(event)">⚗️ Open Lab →</button>'
-            : '<div class="ch-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>'}
+          <div class="ch-arrow"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
         </div>`;
       grid.appendChild(card);
     });
 
+    // Patch CH-9 card with Solution Lab button
+    var allCards = grid.querySelectorAll('.chapter-card');
+    s.data.forEach(function(ch, i) {
+      if (ch._sl && allCards[i]) {
+        allCards[i].style.borderColor = '#AAFF00';
+        allCards[i].style.boxShadow = '0 0 0 1px rgba(170,255,0,.3), 0 8px 28px rgba(0,0,0,.5)';
+        var footer = allCards[i].querySelector('.card-footer');
+        if (footer) {
+          var arrow = footer.querySelector('.ch-arrow');
+          if (arrow) {
+            var btn = document.createElement('a');
+            btn.href = 'solution-lab-ch9.html';
+            btn.target = '_blank';
+            btn.className = 'ch9-btn';
+            btn.textContent = '⚗️ Open Lab';
+            arrow.parentNode.replaceChild(btn, arrow);
+          }
+        }
+      }
+    });
     grid.classList.remove('content-fade-out');
     hdr.classList.remove('content-fade-out');
     grid.classList.add('content-fade-in');
@@ -906,18 +732,6 @@ fleetDefs.forEach(r=>{
 /* ── CLOCK ── */
 function updateClock(){ const now=new Date(); document.getElementById('clockDisplay').textContent='UTC '+now.toLocaleTimeString('en-US',{hour12:false}); }
 setInterval(updateClock,1000); updateClock();
-
-function openSubbranch(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('chapter-area').style.display = 'none';
-  document.getElementById('ch9-subbranch').classList.add('active');
-}
-
-function closeSubbranch() {
-  document.getElementById('ch9-subbranch').classList.remove('active');
-  document.getElementById('chapter-area').style.display = '';
-}
-
 </script>
 </body>
 </html>
