@@ -1293,6 +1293,8 @@ const NOTES = [
     quickQ: "Is muddy water uniform or non-uniform? Why?",
     quickA: "Non-uniform — mud particles are not evenly distributed and settle on standing.",
     realLife: "ORS tastes the same in every sip because it is a uniform mixture.",
+    videoSrc: "https://raw.githubusercontent.com/Next-Gen-Media-and-Content-Development/nebula-8-class-8th-/main/ors_preparation.mp4",
+    videoLabel: "Watch: How to Prepare ORS",
     think: "Why does ORS taste the same in every sip?",
     thinkA: "Salt and sugar are dissolved evenly, so every part of the solution has the same concentration."
   },
@@ -1525,7 +1527,21 @@ function buildNotes() {
         <div class="key-terms">${n.terms.map(t=>`<span class="key-term">${t}</span>`).join('')}</div>
         ${n.formula ? `<div class="formula-box"><strong>📐 Formula</strong>${n.formula.replace(/\n/g,'<br>')}</div>` : ''}
         <p class="note-desc"><strong>📌 Example:</strong> ${n.example}</p>
-        ${n.realLife ? `<div class="real-life"><strong>🌍 Real-Life Connection</strong>${n.realLife}</div>` : ''}
+        ${n.realLife ? `<div class="real-life">
+          <strong>🌍 Real-Life Connection</strong>
+          ${n.realLife}
+          ${n.videoSrc ? `
+          <div style="margin-top:10px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(230,57,70,0.25);background:rgba(255,255,255,0.55);">
+            <div style="display:flex;align-items:center;gap:7px;padding:7px 12px;background:rgba(230,57,70,0.1);border-bottom:1px solid rgba(230,57,70,0.18);">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e63946" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span style="font-size:0.68rem;font-weight:800;letter-spacing:0.07em;color:#c0102a;text-transform:uppercase;">${n.videoLabel || 'Video Solution'}</span>
+            </div>
+            <video controls preload="metadata" style="display:block;width:100%;max-height:320px;background:#000;" aria-label="${n.videoLabel || 'Video solution'}">
+              <source src="${n.videoSrc}" type="video/mp4">
+              Your browser does not support the video element.
+            </video>
+          </div>` : ''}
+        </div>` : ''}
         ${n.think ? `<div class="think-box"><strong>🧠 Think Like a Scientist</strong>${n.think}</div>` : ''}
         ${n.mistake ? `<div class="mistake-box"><strong>⚠️ Common Mistake</strong>${n.mistake}</div>` : ''}
         <div class="quick-check">
