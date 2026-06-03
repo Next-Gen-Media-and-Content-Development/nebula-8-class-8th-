@@ -73,7 +73,28 @@ const NOTES_MEDIA = {
         caption: "Dilute vs Concentrated: fewer vs more solute particles in the same volume"
       }
     ],
-   
+    videos: [
+      {
+        src: "https://raw.githubusercontent.com/Next-Gen-Media-and-Content-Development/nebula-8-class-8th-/main/ors_preparation.mp4",
+        label: "Watch: How to Prepare ORS"
+      }
+    ]
+  },
+
+  "Solubility of Gases": {
+    images: [
+      {
+        src: "solubility_of_gases_in_water.png",
+        caption: "Cold water holds more dissolved oxygen — that's why aquatic animals thrive in colder, cleaner water"
+      }
+    ]
+  },
+
+  "Why Objects Float or Sink": {
+    images: [
+      {
+        src: "why_does_saw_dust_float_but_sand_sink.png",
+        caption: "Sawdust floats (less dense than water, buoyant force wins); sand sinks (denser than water, gravity wins)"
       }
     ]
   }
