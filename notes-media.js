@@ -73,10 +73,7 @@ const NOTES_MEDIA = {
         caption: "Dilute vs Concentrated: fewer vs more solute particles in the same volume"
       }
     ],
-    videos: [
-      {
-        src: "https://raw.githubusercontent.com/Next-Gen-Media-and-Content-Development/nebula-8-class-8th-/main/ors_preparation.mp4",
-        label: "Watch: How to Prepare ORS"
+   
       }
     ]
   }
